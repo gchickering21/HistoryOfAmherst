@@ -1,0 +1,57 @@
+---
+title: "Amherst History Report"
+author: "XX GROUP NAMES HERE XX"
+date: "XX DATE 2020"
+output: 
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+    toc: true
+---
+
+
+```{r, setup, include=FALSE}
+library(mosaic)  
+library(tidyverse)
+library(mdsr)
+knitr::opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+```
+
+\newpage
+
+# Executive Summary (for Biddy)
+
+This should be self-contained and up to one page in length (imagine that is *all* that she would read).
+
+\newpage
+
+# Wrangling
+
+```{r}
+loc <- "chapter_files/"
+list.files(loc)
+sample_chapter <- readLines(paste(loc, "chapter01.txt", sep = ""))
+head(sample_chapter, 30)
+```
+
+Your wrangling should go here.  If you need to do extensive processing of the chapters then please read in that output here and reference where I can find the other code.
+
+Details matter: please be attentive to aspects of appearance and code style.
+
+# Analysis
+
+This should include your analyses and interpretation. 
+
+# Discussion
+
+Here I am expecting two or three paragraphs
+
+What did you learn?  
+
+What insights did you glean?
+
+# Technical Appendix
+
+In a paragraph or two, describe what wrangling or analysis you did that went above and beyond what was discussed in chapter 19 of MDSR: https://beanumber.github.io/mdsr2e/ch-text.html 

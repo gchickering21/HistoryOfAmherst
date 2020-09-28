@@ -1,0 +1,88 @@
+---
+title: "Process Amherst History"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "September 27, 2020"
+output: 
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, setup, include=FALSE}
+library(mosaic)  
+library(tidyverse)
+library(mdsr)
+knitr::opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small")   # slightly smaller font for code
+```
+
+# Clean up Amherst History to make it easier for students to wrangle
+
+```{r}
+process_chapter <- function(lines) {
+  # we are looking to remove the page numbers, given by three blank lines, a line of text, then a blank line
+  # here's an example
+  #
+  #
+  #
+  # THE COLLEGE A SCHOOL OP AND FOE CHRIST. 443  
+  #
+  # All those lines should disappear
+  # I am assuming that the three blank lines are sufficient here to distinguish the pattern
+  # Further checking may be warranted
+  counter <- 0
+  to_prune <- c()
+  for (line in 1:(length(lines) - 2)) {
+    if (lines[line] != "" & counter >= 2) {
+      counter <- 0
+    } else if (counter < 2) {
+      counter <- counter + 1
+    } else if (counter >= 2) { # remove some blank lines + page ref
+      to_prune <- c(to_prune, (line - 2):(line + 1))
+    }
+  }
+  return(lines[-to_prune])
+}
+```
+
+```{r}
+history <- readLines("amherst_history.txt")
+total_lines <- length(history)
+total_lines
+history[total_lines + 1] <- "CHAPTER END"
+
+# first process chapter breaks
+chapter_lines <- grep("^CHAPTER ", history)
+length(chapter_lines)
+line_num <- 1
+for (chapter in seq(chapter_lines)) {
+  last_line <- chapter_lines[chapter] - 3    # last lines are blank
+  cleaned <- process_chapter(history[line_num:last_line])
+  sink(file = paste("chapter", sprintf("%02d", chapter - 1), ".txt", sep = ""))
+  for (line in 1:length(cleaned)) { # last two lines are blank
+    cat(cleaned[line], "\n")  # copy line
+  }
+  line_num <- chapter_lines[chapter]
+  sink()
+}
+```
+
+
+```{r eval = FALSE}
+for (line_num in 1:length(history)) {
+  if (history[line_num]) != "" { # non blank line
+    counter <- 0
+    cat(history[line_num], "\n")  # copy line
+  } else {
+    if (counter <= 2)
+  }
+}
+```
