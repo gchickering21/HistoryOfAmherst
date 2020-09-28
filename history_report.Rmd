@@ -1,7 +1,7 @@
 ---
 title: "Amherst History Report"
-author: "XX GROUP NAMES HERE XX"
-date: "XX DATE 2020"
+author: "Clara Seo and Graham Chickering"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
   pdf_document:
     fig_height: 3
