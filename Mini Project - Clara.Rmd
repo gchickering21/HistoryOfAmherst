@@ -27,22 +27,47 @@ text <- readtext(paste0(dir, "/chapter_files/*.txt"))
 
 # single string of text that contains the entire chapter
 chapter1_raw <- text[1,2]
-chapter8_raw <- text[8,2]
 
-# strsplit returns a list: we only want the first element
-chapter1 <- stringr::str_split(chapter1_raw, "\n")[[1]]
-chapter8 <- stringr::str_split(chapter8_raw, "\n")[[1]]
+n_chapters <- length(text)
+for(i in 1:n_chapters){
+  temp_chapter <- text[i,2]
+  assign(paste("chapter", i-1, "_raw", sep=""), temp_chapter)
+}
 ```
 
 ```{r}
-chapter8_df <- as.data.frame(chapter8)
+# strsplit returns a list: we only want the first element
+chapter8 <- stringr::str_split(chapter8_raw, "\n")[[1]]
 
-chapter8_raw
+# function to remove hyphen and merge hyphenated word
+removeHyphen_concat <- function(chapter) {
 
-chapter8_raw = gsub("\\-$\n", "'", chapter8_raw);
-chapter8_raw
-# remove whitespaces on the right side (at end of line)
-chapter8 <- str_trim(chapter8,side = "right")
+  # remove whitespaces on the right side (at end of line)
+  chapter <- str_trim(chapter, side = "right")
+
+  # determine which lines end with hyphen
+  is_end_hyphen <- str_detect(chapter, regex("\\-$"))
+
+  i <- length(is_end_hyphen)
+  for (r in 1:i) {
+    if (is_end_hyphen[r] == TRUE) {
+      # extract second-half of hyphenated word, delete from carry-over line
+      second_half <- str_extract(chapter[r + 1], regex("^\\w+"))
+      chapter[r + 1] <- gsub(
+        str_extract(chapter[r + 1], regex("^\\w+")), "",
+        chapter[r + 1]
+      )
+      chapter[r + 1] <- str_trim(chapter[r + 1], side = "left")
+
+      # delete the end-hyphen, concatenate first- and second-half of hyphenated word
+      chapter[r] <- gsub("\\-$", "", chapter[r])
+      chapter[r] <- paste(chapter[r], second_half, sep = "")
+    }
+  }
+  return(chapter)
+}
+
+removeHyphen_concat(chapter8)
 
 # remove the escaped hyphen at end of line
 chapter8 <- gsub("\\-$", "", chapter8)
@@ -50,5 +75,10 @@ chapter8 <- gsub("\\-$", "", chapter8)
 # tokenization: break the text into individual tokens
 chapter8_df %>%
   unnest_tokens(word, chapter8)
+
+
+chapter8_raw = gsub("\\-$", "'", chapter8_raw);
+chapter8_raw
+
 ```
 
