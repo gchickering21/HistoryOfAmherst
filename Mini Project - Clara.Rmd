@@ -16,21 +16,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r data read-in}
-# Set the working directory to the project directory
-setwd("~/Dropbox (Amherst College)/2021 FALL/STAT 495/history-historyG")
-
-# Get the data directory from readtext
-dir <- getwd()
-
 # Read in all files from a folder called "chapter_files"
-text <- readtext(paste0(dir, "/chapter_files/*.txt"))
+text <- readtext("chapter_files/*.txt")
 
-# single string of text that contains the entire chapter
-chapter1_raw <- text[1,2]
-
-n_chapters <- length(text)
+n_chapters <- nrow(text)
 for(i in 1:n_chapters){
+  # single string of text that contains the entire chapter
   temp_chapter <- text[i,2]
+  
+  # rename string with appropriate chapter number
   assign(paste("chapter", i-1, "_raw", sep=""), temp_chapter)
 }
 ```
@@ -67,18 +61,28 @@ removeHyphen_concat <- function(chapter) {
   return(chapter)
 }
 
+apply()
+
+n_chapters <- nrow(text)
+for(i in 1:n_chapters){
+  # single string of text that contains the entire chapter
+  temp_chapter <- text[i,2]
+  
+  # rename string with appropriate chapter number
+  assign(paste("chapter", i-1, "_raw", sep=""), temp_chapter)
+}
+
+chapter8 <- removeHyphen_concat(chapter8)
 removeHyphen_concat(chapter8)
+removeHyphen_concat(chapter8)
+```
 
-# remove the escaped hyphen at end of line
-chapter8 <- gsub("\\-$", "", chapter8)
-
-# tokenization: break the text into individual tokens
-chapter8_df %>%
-  unnest_tokens(word, chapter8)
-
-
-chapter8_raw = gsub("\\-$", "'", chapter8_raw);
-chapter8_raw
-
+```{r}
+# checking removeHyphen_concat() function with small test example
+test <- c("The boy is in the hou-", 
+          "se that is blue. He loves bulldogs and pine-", 
+          "apples and bananas. Have a great day!")
+test_fixed <- removeHyphen_concat(test)
+test_fixed
 ```
 
