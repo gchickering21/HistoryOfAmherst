@@ -1,0 +1,54 @@
+---
+title: "Mini Project - Clara"
+author: "Clara Seo"
+date: "9/29/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(readtext)
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r data read-in}
+# Set the working directory to the project directory
+setwd("~/Dropbox (Amherst College)/2021 FALL/STAT 495/history-historyG")
+
+# Get the data directory from readtext
+dir <- getwd()
+
+# Read in all files from a folder called "chapter_files"
+text <- readtext(paste0(dir, "/chapter_files/*.txt"))
+
+# single string of text that contains the entire chapter
+chapter1_raw <- text[1,2]
+chapter8_raw <- text[8,2]
+
+# strsplit returns a list: we only want the first element
+chapter1 <- stringr::str_split(chapter1_raw, "\n")[[1]]
+chapter8 <- stringr::str_split(chapter8_raw, "\n")[[1]]
+```
+
+```{r}
+chapter8_df <- as.data.frame(chapter8)
+
+chapter8_raw
+
+chapter8_raw = gsub("\\-$\n", "'", chapter8_raw);
+chapter8_raw
+# remove whitespaces on the right side (at end of line)
+chapter8 <- str_trim(chapter8,side = "right")
+
+# remove the escaped hyphen at end of line
+chapter8 <- gsub("\\-$", "", chapter8)
+
+# tokenization: break the text into individual tokens
+chapter8_df %>%
+  unnest_tokens(word, chapter8)
+```
+
