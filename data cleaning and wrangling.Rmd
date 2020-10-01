@@ -90,7 +90,25 @@ clean_data <- function(df){
   return(df)
 }
 text <- clean_data(text)
+
 ```
+
+
+```{r}
+##This gets all the chapters into their own separate df's
+  n_chapters <- nrow(text)
+  for(i in 1:n_chapters){
+  # single string of text that contains the entire chapter
+  temp_chapter <- text[i,2] 
+  string_chapter<-stringr::str_split(temp_chapter, "\n")[[1]]
+  num_lines<-length(string_chapter)
+  chapter_df<-tibble(line = 1:num_lines, text = string_chapter ) %>% select(text)
+  # rename string with appropriate chapter number
+  assign(paste("chapter", i-1,"_df",sep=""), chapter_df)
+}
+```
+
+
 
 
 ```{r}
