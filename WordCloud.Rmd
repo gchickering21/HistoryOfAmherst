@@ -1,0 +1,70 @@
+---
+title: "Word Cloud"
+author: "Graham Chickering"
+date: "9/29/2020"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(mdsr)
+library(tidytext)
+library(readtext)
+library(tm)
+library(RColorBrewer)
+```
+
+```{r}
+text <- readtext("chapter_files/*.txt")
+
+n_chapters <- nrow(text)
+for(i in 1:n_chapters){
+  # single string of text that contains the entire chapter
+  temp_chapter <- text[i,2]
+  
+  # rename string with appropriate chapter number
+  assign(paste("chapter", i-1, "_raw", sep=""), temp_chapter)
+}
+```
+
+```{r}
+chapter8 <- stringr::str_split(chapter8_raw, "\n")[[1]]
+chapter8_df <- tibble(line = 1:469, text = chapter8 ) %>% select(text)
+chapter8_df
+```
+
+
+```{r}
+word_count <- chapter8_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  count(word, sort = TRUE) %>%
+  select(word, n)
+word_count
+```
+
+
+```{r}
+key_words<- chapter8_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  anti_join(tidytext::get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>% mutate(freq=n) %>% 
+  select(word, freq)
+key_words
+```
+
+
+```{r}
+library(wordcloud)
+set.seed(1962)
+
+wordcloud(
+  words=key_words$word,
+  freq=key_words$freq,
+  scale=c(4,0.5),
+  min.freq=5,
+  max.words = 100,
+  colors = brewer.pal(6, "Purples"),
+  random.color = TRUE)
+```
+
