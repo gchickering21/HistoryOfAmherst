@@ -1,0 +1,83 @@
+---
+title: "Sentiment Analysis"
+author: "Graham Chickering"
+date: "9/30/2020"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(mdsr)
+library(tidytext)
+library(textdata)
+```
+
+```{r}
+text <- readtext("chapter_files/*.txt")
+
+n_chapters <- nrow(text)
+for(i in 1:n_chapters){
+  # single string of text that contains the entire chapter
+  temp_chapter <- text[i,2]
+  
+  # rename string with appropriate chapter number
+  assign(paste("chapter", i-1, "_raw", sep=""), temp_chapter)
+}
+```
+
+```{r}
+chapter8 <- stringr::str_split(chapter8_raw, "\n")[[1]]
+chapter8_df <- tibble(line = 1:469, text = chapter8 ) %>% select(text)
+chapter8_df
+```
+
+```{r}
+key_words<- chapter8_df %>%
+  tidytext::unnest_tokens(word, text) %>%
+  anti_join(tidytext::get_stopwords(), by = "word") %>%
+  count(word, sort = TRUE) %>% mutate(freq=n) %>% 
+  select(word, freq)
+key_words
+```
+
+```{r}
+afinn <- tidytext::get_sentiments("afinn")
+key_words1 <- key_words %>% 
+  left_join(afinn, by = "word")
+key_words1
+
+```
+
+```{r}
+nrc<-tidytext::get_sentiments("nrc")
+key_words2 <- key_words %>% 
+  left_join(nrc, by = "word")
+key_words2
+```
+
+```{r}
+bing<-tidytext::get_sentiments("bing")
+key_words3 <- key_words %>% 
+  inner_join(bing, by = "word")
+key_words3
+```
+
+```{r}
+## need to add a line number somehow
+##try to do sentiment analysis across chapters 
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(bing, by = "word") %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+```
+
+https://www.tidytextmining.com/sentiment.html#the-sentiments-dataset
+https://medium.com/@actsusanli/text-mining-is-fun-with-r-35e537b12002
+
+
+##Topic Modeling ??
+https://monkeylearn.com/blog/introduction-to-topic-modeling/
+https://www.tidytextmining.com/topicmodeling.html
+
+
+
