@@ -159,3 +159,9 @@ for (i in 1:n_chapters) {
   assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
 }
 ```
+
+```{r}
+# saving newly cleaned dataset as a csv file called "all_texts"
+write.csv(x=texts_df, file="all_texts.csv")
+dog <- read.csv(file="all_texts.csv")
+```
