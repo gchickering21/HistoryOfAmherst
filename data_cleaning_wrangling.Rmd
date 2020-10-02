@@ -1,26 +1,23 @@
 ---
-title: "Sentiment Analysis"
-author: "Graham Chickering"
-date: "9/30/2020"
+title: "Data Cleaning/Wrangling"
+author: "Clara Seo"
+date: "9/29/2020"
 output: pdf_document
 ---
 
-```{r}
-library(mdsr)
-library(tidyverse)
-library(tidytext)
+```{r setup, include=FALSE}
 library(readtext)
-library(textdata)
-library(tm) # for text mining
-library(SnowballC) # for text stemming
-library(RColorBrewer) # color palettes
-library(syuzhet) # for sentiment analysis
-library(ggplot2) # for plotting graphs
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r data read-in}
 # Read in all files from a folder called "chapter_files"
-text <- as.data.frame(readtext("chapter_files/*.txt"))
+texts_df <- as.data.frame(readtext("chapter_files/*.txt"))
 ```
 
 ```{r helper function 1}
@@ -50,6 +47,16 @@ removeHyphen_concat <- function(df, index) {
 }
 ```
 
+```{r testing helper function 1}
+chapter1_test <- c("chapter1","She works at a countryclub as a life- \n guard. This summer job will help her sup- \n port her family. She hopes to study hard and get into a good coll- \n ege!")
+chapter2_test <- c("chapter2","The dogs are barking really loudly, while runn- \n ing around the fields like cra- \n zy! The owners are having a cute pic- \n nic under the tree in the breezy sha- \n de; they are snacking on grapes and cheese and wine.")
+chapter3_test <- c("chapter3","Halloween is right around the corn- \n er! We all cannot believe its alrea- \n dy October! I cannot wait to stuff myself with chocol- \n ate bars and candy; I cannot wait to wear my piglet onsie.")
+df_test1 <- rbind.data.frame(chapter1_test, chapter2_test, chapter3_test)
+colnames(df_test1) <- c("chapters", "text")
+index <- 2
+df_test1[index,2] <- removeHyphen_concat(df_test1, index)
+```
+
 ```{r helper function 2}
 hyphen_cleanup <- function(chapter, r) {
   # determine which lines end with hyphen
@@ -72,6 +79,17 @@ hyphen_cleanup <- function(chapter, r) {
 }
 ```
 
+```{r testing helper function 2}
+test2 <- c("The blue house is in the mid-", 
+          "dle of the farm, surrounded by wildflo-",
+          "wers. The woman is baking pret-",
+          "zel buns coated in cinnamon.")
+r_test2 <- 2
+test2 <- hyphen_cleanup(test2, r_test2)
+test2
+```
+
+
 ```{r helper function 3}
 punctuation_cleanup <- function(chapter, q) {
   # determine which lines start with punctuation
@@ -89,6 +107,16 @@ punctuation_cleanup <- function(chapter, q) {
   }
   return(chapter)
 }
+```
+
+```{r testing helper function 3}
+test3 <- c("The bagels and croissants are really good", 
+          "! The chai latte gives you soft and fuzzy feelings",
+          "; the matcha latte is scrumptious",
+          ". This cafe is my favorite.")
+r_test3 <- 2
+test3 <- punctuation_cleanup(test3, r_test3)
+test3
 ```
 
 ```{r}
@@ -111,90 +139,23 @@ clean_data <- function(df){
   return(df)
 }
 
-text <- clean_data(text)
+texts_df <- clean_data(texts_df)
 ```
 
 ```{r}
-n_chapters <- nrow(text)
-for(i in 1:n_chapters){
+n_chapters <- nrow(texts_df)
+text <- c("")
+book <- data.frame(text)
+
+## This gets all the chapters into their own separate df's
+for (i in 1:n_chapters) {
   # single string of text that contains the entire chapter
-  temp_chapter <- text[i,2]
-  
+  temp_chapter <- texts_df[i, 2]
+  string_chapter <- stringr::str_split(temp_chapter, "\n")[[1]]
+  num_lines <- length(string_chapter)
+  chapter_df <- tibble(line = 1:num_lines, text = string_chapter) %>% select(text)
+  book <- rbind(book, chapter_df)
   # rename string with appropriate chapter number
-  assign(paste("chapter", i-1, "_text", sep=""), temp_chapter)
+  assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
 }
 ```
-
-```{r}
-chapter8 <- stringr::str_split(chapter8_text, "\n")[[1]]
-chapter8_df <- tibble(line = 1:length(chapter8), text = chapter8) %>% 
-  select(text)
-chapter8_df
-```
-
-```{r}
-key_words<- chapter8_df %>%
-  tidytext::unnest_tokens(word, text) %>%
-  anti_join(tidytext::get_stopwords(), by = "word") %>%
-  count(word, sort = TRUE) %>% 
-  mutate(freq=n) %>% 
-  select(word, freq)
-key_words
-```
-
-
-```{r}
-# Load the data as a corpus
-TextDoc <- Corpus(VectorSource(chapter8))
-TextDoc <- tm_map(TextDoc, removeWords, stopwords("english"))
-# Build a term-document matrix
-TextDoc_dtm <- TermDocumentMatrix(TextDoc)
-dtm_m <- as.matrix(TextDoc_dtm)
-# Sort by descearing value of frequency
-dtm_v <- sort(rowSums(dtm_m),decreasing=TRUE)
-dtm_d <- data.frame(word = names(dtm_v),freq=dtm_v)
-# Display the top 5 most frequent words
-head(dtm_d, 5)
-```
-
-
-```{r}
-afinn <- tidytext::get_sentiments("afinn")
-key_words1 <- key_words %>% 
-  left_join(afinn, by = "word")
-key_words1
-```
-
-```{r}
-nrc<-tidytext::get_sentiments("nrc")
-key_words2 <- key_words %>% 
-  left_join(nrc, by = "word")
-key_words2
-```
-
-```{r}
-bing<-tidytext::get_sentiments("bing")
-key_words3 <- key_words %>% 
-  inner_join(bing, by = "word")
-key_words3
-```
-
-```{r}
-## need to add a line number somehow
-##try to do sentiment analysis across chapters 
-jane_austen_sentiment <- tidy_books %>%
-  inner_join(bing, by = "word") %>%
-  spread(sentiment, n, fill = 0) %>%
-  mutate(sentiment = positive - negative)
-```
-
-https://www.tidytextmining.com/sentiment.html#the-sentiments-dataset
-https://medium.com/@actsusanli/text-mining-is-fun-with-r-35e537b12002
-
-
-##Topic Modeling ??
-https://monkeylearn.com/blog/introduction-to-topic-modeling/
-https://www.tidytextmining.com/topicmodeling.html
-
-
-
