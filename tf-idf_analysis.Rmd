@@ -9,6 +9,8 @@ output: pdf_document
 library(readtext)
 library(tidytext)
 library(tidyverse)
+library(tokenizers)
+library(stopwords)
 library(dplyr)
 library(tidyr)
 library(kableExtra)
@@ -17,98 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r data read-in}
 # Read in all files from a folder called "chapter_files"
-texts_df <- as.data.frame(readtext("chapter_files/*.txt"))
-```
-
-```{r helper function 1}
-# function to remove hyphens and merge hyphenated words
-removeHyphen_concat <- function(df, index) {
-  chapter <- df[index, 2]
-
-  # strsplit returns a list: we only want the first element
-  chapter <- stringr::str_split(chapter, "\n")[[1]]
-
-  # remove whitespaces on the right side (at end of line)
-  chapter <- str_trim(chapter, side = "both")
-
-  for (r in 1:length(chapter)) {
-    # helper function: 1) deletes hyphen, 2) concatenates word 
-    chapter <- hyphen_cleanup(chapter, r)
-  }
-
-  for (q in 1:length(chapter)) {
-    # helper function: 1) deletes trailing punctuation, 
-    #                  2) concatenates punctuation to end of sentence 
-    chapter <- punctuation_cleanup(chapter, r)
-  }
-
-  chapter_collapse <- paste(chapter, collapse = " \n ")
-  return(chapter_collapse)
-}
-```
-
-```{r helper function 2}
-hyphen_cleanup <- function(chapter, r) {
-  # determine which lines end with hyphen
-  is_end_hyphen <- str_detect(chapter, regex("\\-$"))
-  
-  if (is_end_hyphen[r] == TRUE && !is.na(is_end_hyphen[r])) {
-    # extract second-half of hyphenated word, delete from carry-over line
-    second_half <- str_extract(chapter[r + 1], regex("^\\w+"))
-    chapter[r + 1] <- gsub(
-      str_extract(chapter[r + 1], regex("^\\w+")), "",
-      chapter[r + 1]
-    )
-    chapter[r + 1] <- str_trim(chapter[r + 1], side = "left")
-
-    # delete the end-hyphen, concatenate first- and second-half of hyphenated word
-    chapter[r] <- gsub("\\-$", "", chapter[r])
-    chapter[r] <- paste(chapter[r], second_half, sep = "")
-  }
-  return(chapter)
-}
-```
-
-```{r helper function 3}
-punctuation_cleanup <- function(chapter, q) {
-  # determine which lines start with punctuation
-  is_start_punctuation <- str_detect(chapter, regex("^[[:punct:]]"))
-  
-  if (is_start_punctuation[q] == TRUE && !is.na(is_start_punctuation[q])) {
-
-    # extract trailing punctuation, delete from carry-over line, trim spaces out
-    punc_to_bring_over <- str_extract(chapter[q], regex("^[[:punct:]]"))
-    chapter[q] <- str_remove(chapter[q], "^[[:punct:]]")
-    chapter[q] <- str_trim(chapter[q], side = "left")
-
-    # concatenate sentence with trailing punctuation
-    chapter[q - 1] <- paste(chapter[q - 1], punc_to_bring_over, sep = "")
-  }
-  return(chapter)
-}
-```
-
-```{r clean up data}
-# mega-function that 1) renames chapters 
-#                    2) removes hyphens, miscellaneous punctuation
-clean_data <- function(df){
-  
-  n_chapters <- nrow(df)
-
-  # STEP 1: rename chapters in doc_id from chapter##.txt to chapter##
-  for(i in 1:n_chapters){
-    df[i,1] <- paste("chapter", i-1, sep="")
-  }
-  
-  # STEP 2: use removeHyphen_concat() to remove hyphens and misc. punctuation
-  for(i in 1:n_chapters){
-    df[i,2] <- removeHyphen_concat(df, i)
-  }
-  
-  return(df)
-}
-
-texts_df <- clean_data(texts_df)
+texts_df <- read.csv(file="all_texts.csv")
 ```
 
 ```{r}
@@ -119,7 +30,7 @@ book <- data.frame(text)
 ## This gets all the chapters into their own separate df's
 for (i in 1:n_chapters) {
   # single string of text that contains the entire chapter
-  temp_chapter <- texts_df[i, 2]
+  temp_chapter <- texts_df[i, 3]
   string_chapter <- stringr::str_split(temp_chapter, "\n")[[1]]
   num_lines <- length(string_chapter)
   chapter_df <- tibble(line = 1:num_lines, text = string_chapter) %>% select(text)
@@ -127,4 +38,35 @@ for (i in 1:n_chapters) {
   # rename string with appropriate chapter number
   assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
 }
+```
+
+```{r}
+ACbook_counts <- texts_df %>%
+  select(-X) %>% 
+  
+  #prepare data in useable format for text analysis
+  tidytext::unnest_tokens(word, text) %>%
+  
+  # exclude stop words (i.e. the, an, a, you)
+  anti_join(tidytext::get_stopwords(), by = "word") %>%
+  
+  # count word frequencies for a given chapter
+  count(doc_id, word, sort = TRUE) %>%
+  mutate(freq=n) %>%
+  select(doc_id, word, freq)
+
+tidy_DTM <- ACbook_counts %>%
+  tidytext::bind_tf_idf(word, doc_id, freq)
+
+tidy_DTM %>%
+  arrange(desc(tf)) %>%
+  head()
+```
+
+```{r sentiment}
+ACbook_sentiment <- tidy_DTM %>%
+  inner_join(get_sentiments("bing"), by = "word") %>% 
+  count(doc_id, sentiment) %>% 
+  spread(sentiment, n, fill = 0) %>% 
+  mutate(sentiment = positive - negative)
 ```
