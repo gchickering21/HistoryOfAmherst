@@ -1,5 +1,5 @@
 ---
-title: "TF-DIF analysis"
+title: "TF-DIF/Sentiment analysis"
 author: "Clara Seo"
 date: "10/02/2020"
 output: pdf_document
@@ -14,6 +14,7 @@ library(stopwords)
 library(dplyr)
 library(tidyr)
 library(kableExtra)
+library(ggplot2)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -42,6 +43,7 @@ for (i in 1:n_chapters) {
 
 ```{r}
 ACbook_counts <- texts_df %>%
+  mutate(chapterNum = X-1) %>%
   select(-X) %>% 
   
   #prepare data in useable format for text analysis
@@ -51,22 +53,78 @@ ACbook_counts <- texts_df %>%
   anti_join(tidytext::get_stopwords(), by = "word") %>%
   
   # count word frequencies for a given chapter
-  count(doc_id, word, sort = TRUE) %>%
+  count(chapterNum, word, sort = TRUE) %>%
   mutate(freq=n) %>%
-  select(doc_id, word, freq)
+  select(chapterNum, word, freq)
 
 tidy_DTM <- ACbook_counts %>%
-  tidytext::bind_tf_idf(word, doc_id, freq)
+  tidytext::bind_tf_idf(word, chapterNum, freq)
 
 tidy_DTM %>%
   arrange(desc(tf)) %>%
   head()
 ```
 
+Note: heavily negative = Chapter 14 and Chapter 26 
+Chapter 14 - Period of Reaction and Decline - Resignation of President Humphrey
+Chapter 26 - The War
+
+Stronger negative presence in two chapters. 
+
+Note: most positive = Chapter 16, Chapter 20, and Chapter 25
+Chapter 16 - Biographical Sketches of President Humphrey and Some of His Associates
+Chapter 20 - The Presidency of Dr. Stearns
+Chapter 25 - Benefactors of the College
+
 ```{r sentiment}
-ACbook_sentiment <- tidy_DTM %>%
+# get_sentiments() - tidytext package's three sentiment lexicons
+# bing lexicon categorizes words in a binary fashion into positive/negative
+# afinn lexicon assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)
+# nrc lexicon categorizes words in a binary fashion into categories of: positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, trust
+
+ACbook_sentiment_by_chapter <- tidy_DTM %>%
   inner_join(get_sentiments("bing"), by = "word") %>% 
-  count(doc_id, sentiment) %>% 
+  count(index=chapterNum, sentiment) %>% 
   spread(sentiment, n, fill = 0) %>% 
   mutate(sentiment = positive - negative)
+
+ggplot(data = ACbook_sentiment, aes(x=index, y=sentiment)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
+  labs(x="Chapter", y="Overall Sentiment", 
+       title="Sentiment Change Over the Course of the Book (bing lexicon)")
+
+bing_word_counts <- tidy_DTM %>%
+  inner_join(get_sentiments("bing"), by = "word") %>% 
+  count(word, sentiment) %>% 
+  mutate(method = "bing")
+  ungroup()
+
+nrc_word_counts <- tidy_DTM %>%
+  inner_join(get_sentiments("nrc"), by = "word") %>% 
+  count(word, sentiment) %>% 
+  mutate(method = "NRC")
+
+afinn_word_counts <- tidy_DTM %>%
+  inner_join(get_sentiments("afinn"), by = "word") %>% 
+  count(word, value) %>% 
+  mutate(method = "afinn")
+
+ggplot(data = ACbook_sentiment2, aes(x=n, y=afinn_sentiment)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) +
+  labs(x="Chapter Number", y="Overall Sentiment", 
+       title="Sentiment Change Over the Course of the Book (afinn lexicon)")
+
+# identify and visually assess top 10 contributors to each sentiment
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  top_n(10) %>%
+  ggplot(aes(reorder(word, n), n, fill = sentiment)) +
+    geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+    facet_wrap(~sentiment, scales = "free_y") +
+    labs(y = "Contribution to Sentiment", x = NULL, 
+         title = "Top 10 Contributors of Each Sentiment") +
+    coord_flip()
 ```
+
+
+https://uc-r.github.io/sentiment_analysis

@@ -25,6 +25,20 @@ knitr::opts_chunk$set(
 
 This should be self-contained and up to one page in length (imagine that is *all* that she would read).
 
+Our central question we asked
+- 
+
+Our motivations 
+- 
+
+
+Sentiment analysis is the process of using text analysis and statistics to extract and identify sentiment of words into positive, negative, or neutral categories. It can be thought of a categorical framework in which the given text can be labelled as certain sentiments and to a specific degree. 
+There are limitations to such analysis. Even before labeling a given text with a sentiment, determining what is a "sentiment" is in the first place is subject to bias. The complexity comes from the multi-layered nature of human-generated sentences (i.e. sarcasm, irony, implied meaning). 
+
+Importance of Objectivity in history 
+
+
+
 \newpage
 
 # Wrangling
