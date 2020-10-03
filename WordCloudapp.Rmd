@@ -1,0 +1,70 @@
+---
+title: "Word Cloud"
+author: "Graham Chickering"
+date: "9/29/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(mdsr)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+library(tm)
+library(RColorBrewer)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+get_keywords <- function(chapter) {
+  cleaned_book <- read.csv(file = "all_chapters.csv") %>% select(-X)
+  chapter <- cleaned_book[, grepl(chapter, names(cleaned_book))]
+  chapter <- na.omit(chapter)
+  chapter <- as.data.frame(chapter)
+  names(chapter)[1] <- paste("text")
+
+  word_count <- chapter %>%
+    tidytext::unnest_tokens(word, text) %>%
+    anti_join(tidytext::get_stopwords(), by = "word") %>%
+    count(word, sort = TRUE) %>%
+    select(word, n)
+}
+```
+
+
+```{r}
+set.seed(1962)
+terms<-get_keywords("Chapter0")
+terms
+  wordcloud(
+      words=terms$word,
+      freq=terms$n, max.words=40,
+      scale = c(4, 0.5), colors = brewer.pal(6, "Purples")
+    )
+  
+# wordcloud(
+#   cleaned_book$abstract_clean, 
+#   max.words = 40, 
+#   scale = c(8, 1), 
+#   colors = topo.colors(n = 30), 
+#   random.color = TRUE)
+```
+
+```{r}
+library(wordcloud)
+set.seed(1962)
+
+wordcloud(
+  words=key_words$word,
+  freq=key_words$freq,
+  scale=c(4,0.5),
+  min.freq=5,
+  max.words = 100,
+  colors = brewer.pal(6, "Purples"))
+```
+
+

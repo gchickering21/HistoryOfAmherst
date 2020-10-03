@@ -11,6 +11,7 @@ library(tidytext)
 library(tidyverse)
 library(dplyr)
 library(tidyr)
+library(gdata)
 library(kableExtra)
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -115,7 +116,7 @@ chapter3_test <- c("chapter3","Halloween is right around the corn- \n er! We all
 df_test3 <- rbind.data.frame(chapter1_test, chapter2_test, chapter3_test)
 colnames(df_test3) <- c("chapters", "text")
 index <- 2
-df_test1[index,2] <- removeHyphen_concat(df_test3, index)
+df_test3[index,2] <- removeHyphen_concat(df_test3, index)
 ```
 
 ```{r}
@@ -142,9 +143,11 @@ texts_df <- clean_data(texts_df)
 ```
 
 ```{r}
+##This creates a separate dataframe for each chapter, and also combines each chapter into a book as well.
 n_chapters <- nrow(texts_df)
 text <- c("")
-book <- data.frame(text)
+book <- data.frame()
+chapters<-data.frame(text)
 
 ## This gets all the chapters into their own separate df's
 for (i in 1:n_chapters) {
@@ -152,15 +155,27 @@ for (i in 1:n_chapters) {
   temp_chapter <- texts_df[i, 2]
   string_chapter <- stringr::str_split(temp_chapter, "\n")[[1]]
   num_lines <- length(string_chapter)
-  chapter_df <- tibble(line = 1:num_lines, text = string_chapter) %>% select(text)
+  chapter_df <- tibble(line = 1:num_lines,chapter_number = string_chapter) %>%
+    select(chapter_number)
   book <- rbind(book, chapter_df)
+  chapters <- cbindX(chapters, chapter_df)
   # rename string with appropriate chapter number
   assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
 }
 ```
 
 ```{r}
+##This combines all the chapters together and renames all the column rows
+colnames(chapters) <- paste("Chapter", -1:28, sep = "")
+colnames(book)<-paste("Book")
+chapters<-chapters %>% select(-"Chapter-1")
+chapters<-cbindX(book, chapters) 
+```
+
+
+
+```{r}
 # saving newly cleaned dataset as a csv file called "all_texts"
-write.csv(x=texts_df, file="all_texts.csv")
-dog <- read.csv(file="all_texts.csv")
+write.csv(x=chapters, file="all_chapters.csv")
+dog <- read.csv(file="all_chapters.csv")
 ```
