@@ -31,6 +31,23 @@ Our central question we asked
 Our motivations 
 - 
 
+History is often recounted in a biased, subjective manner. One's implicit and subconcious biases are imposed the text that one writes. 
+- Given that the book we have analyzed is a historical acccount of Amherst College's founding 50 years, a text analysis of such was warranted in light of recent events that brought awareness and stressed the importance of a complete narrative to history. 
+- get a sense of how biased the text was, and our analysis conclude that the book as a whole had a strong positive presence, which is unsurprising.
+- we found two chapters to be particularly strong in negative sentiments.
+- the art of recounting history is about telling all sides of the story, the good, the bad, and the ugly.
+
+
+- Chapter 14 (negative): slavery, Humphrey 
+- Chapter 26 (negative): battle, war, army, service 
+
+- Chapter 16 (positive): Humphrey, Fiske, church
+- Chapter 20 (positive): Stearns, trustees, Hitchcock, Walker, presidency
+- Chapter 25 (positive): church, Boston, education, dollars, Appleton, Williston, library, money, income
+
+We designed a word cloud to get a visual sense of what each chapter is about.
+- a more fun way of showing the keywords to each chapter
+- the word cloud allows us to get a higher level understanding of what the chapter is about. 
 
 Sentiment analysis is the process of using text analysis and statistics to extract and identify sentiment of words into positive, negative, or neutral categories. It can be thought of a categorical framework in which the given text can be labelled as certain sentiments and to a specific degree. 
 There are limitations to such analysis. Even before labeling a given text with a sentiment, determining what is a "sentiment" is in the first place is subject to bias. The complexity comes from the multi-layered nature of human-generated sentences (i.e. sarcasm, irony, implied meaning). 
@@ -69,3 +86,7 @@ What insights did you glean?
 # Technical Appendix
 
 In a paragraph or two, describe what wrangling or analysis you did that went above and beyond what was discussed in chapter 19 of MDSR: https://beanumber.github.io/mdsr2e/ch-text.html 
+
+- removing hyphens and punctuations
+- word cloud 
+- visual graphs 

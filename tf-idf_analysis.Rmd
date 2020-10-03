@@ -64,17 +64,11 @@ tidy_DTM %>%
   arrange(desc(tf)) %>%
   head()
 ```
+Term frequency, tf(t,d) - raw count, number of times that term $t$ occurs in given document $d$, how frequently a word occurs in a document
+Inverse document frequency, idf(t,D) - constant per corpus of D documents, accounts for ratio of documents that include the word $t$, measure of how much information the word provides (i.e. common or rar across all documents), logarithmically scaled inverse fraction, incorporated to diminish the weight of terms that occur very frequently in the given text and increases the weight of terms that occur rarely.
+TF-IDF = tf(t,d)*idf(t,D), high tf-idf means high term frequency and low document frequency of term 
 
-Note: heavily negative = Chapter 14 and Chapter 26 
-Chapter 14 - Period of Reaction and Decline - Resignation of President Humphrey
-Chapter 26 - The War
-
-Stronger negative presence in two chapters. 
-
-Note: most positive = Chapter 16, Chapter 20, and Chapter 25
-Chapter 16 - Biographical Sketches of President Humphrey and Some of His Associates
-Chapter 20 - The Presidency of Dr. Stearns
-Chapter 25 - Benefactors of the College
+A central question in text analysis is how to quantify what a document is about. Can we do such quantification by looking at the words that make up the document? 
 
 ```{r sentiment}
 # get_sentiments() - tidytext package's three sentiment lexicons
@@ -93,12 +87,6 @@ ggplot(data = ACbook_sentiment, aes(x=index, y=sentiment)) +
   labs(x="Chapter", y="Overall Sentiment", 
        title="Sentiment Change Over the Course of the Book (bing lexicon)")
 
-bing_word_counts <- tidy_DTM %>%
-  inner_join(get_sentiments("bing"), by = "word") %>% 
-  count(word, sentiment) %>% 
-  mutate(method = "bing")
-  ungroup()
-
 nrc_word_counts <- tidy_DTM %>%
   inner_join(get_sentiments("nrc"), by = "word") %>% 
   count(word, sentiment) %>% 
@@ -109,10 +97,19 @@ afinn_word_counts <- tidy_DTM %>%
   count(word, value) %>% 
   mutate(method = "afinn")
 
-ggplot(data = ACbook_sentiment2, aes(x=n, y=afinn_sentiment)) +
-  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) +
-  labs(x="Chapter Number", y="Overall Sentiment", 
-       title="Sentiment Change Over the Course of the Book (afinn lexicon)")
+bing_word_counts <- tidy_DTM %>%
+  inner_join(get_sentiments("bing"), by = "word") %>% 
+  count(word, sentiment) %>% 
+  ungroup()
+
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ggplot(aes(reorder(word, n), n, fill = sentiment)) +
+  geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Contribution to sentiment", x = NULL) +
+  coord_flip()
 
 # identify and visually assess top 10 contributors to each sentiment
 bing_word_counts %>%
@@ -125,6 +122,15 @@ bing_word_counts %>%
          title = "Top 10 Contributors of Each Sentiment") +
     coord_flip()
 ```
+Note: heavily negative = Chapter 14 and Chapter 26 
+Chapter 14 - Period of Reaction and Decline - Resignation of President Humphrey
+Chapter 26 - The War
 
+Stronger negative presence in two chapters. 
+
+Note: most positive = Chapter 16, Chapter 20, and Chapter 25
+Chapter 16 - Biographical Sketches of President Humphrey and Some of His Associates
+Chapter 20 - The Presidency of Dr. Stearns
+Chapter 25 - Benefactors of the College
 
 https://uc-r.github.io/sentiment_analysis
