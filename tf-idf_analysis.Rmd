@@ -82,7 +82,7 @@ ACbook_sentiment_by_chapter <- tidy_DTM %>%
   spread(sentiment, n, fill = 0) %>% 
   mutate(sentiment = positive - negative)
 
-ggplot(data = ACbook_sentiment, aes(x=index, y=sentiment)) +
+ggplot(data = ACbook_sentiment_by_chapter, aes(x=index, y=sentiment)) +
   geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
   labs(x="Chapter", y="Overall Sentiment", 
        title="Sentiment Change Over the Course of the Book (bing lexicon)")
