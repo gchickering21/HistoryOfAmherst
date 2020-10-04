@@ -9,7 +9,6 @@ output: pdf_document
 library(purrr)
 ```
 
-
 ```{r}
 nrc<-tidytext::get_sentiments("nrc")
 
@@ -21,36 +20,32 @@ AC_sentiment_by_chapter
 
 ```
 ```{r}
+ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= fear)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
+  labs(x="Chapter", y=paste( "Fear Count",sep=" "), 
+       title=paste( "Amount of Fear Change Over the Course of the Book (nrc lexicon)", sep=" "))
+```
+
+From this graph we can see that the individual chapters range widely in terms of the amount of fear contained in the chapter. As we can see chapters 0,3,15, and 27 are all chapters with very low fear, whereas chapters 14, 16, and 28 all have very high levels of fear. 
+Note: Chapters with High Levels of Fear
+Chapter 14 - Period of Reaction and Decline - Resignation of President Humphrey
+Chapter 16 - Biographical Sketches of President Humprey and some of his associates
+Chapter 28 - Then and Now - Panoramic Review of Change and Progress
+
+Note: Chapters with Low Levels of Fear
+Chapter 0: PREFACE
+Chapter 3: AMHERST ACADEMY,
+Chapter 15: THE RELIGIOUS HISTORY OF THIS PERIOD
+Chapter 27: THE SEMI-CENTENNIAL CELEBRATION
+
+
+```{r}
 ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= joy)) +
   geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
   labs(x="Chapter", y=paste( "Joy Count",sep=" "), 
-       title=paste( "Joy Change Over the Course of the Book (nrc lexicon)", sep=" "))
+       title=paste( "Amount of Joy Change Over the Course of the Book (nrc lexicon)", sep=" "))
 ```
 
-```{r}
-ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= sadness)) +
-  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
-  labs(x="Chapter", y=paste( "Sadness Count",sep=" "), 
-       title=paste( "Sadness Change Over the Course of the Book (nrc lexicon)", sep=" "))
-```
-
-
-
-```{r}
-get_emotion_plot<-function(.data, emotion){
- ggplot(data= .data, aes(x=index, y= emotion)) #+
-#   geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) +
-#   labs(x="Chapter", y=paste(emotion, "Count",sep=" "),
-#        title=paste(emotion, "Change Over the Course of the Book (nrc lexicon)", sep=" "))
-}
-```
-
-```{r}
-#trial<-c("anger")#, "anticipation", "disgust","fear","joy","negative","positive","sadness","suprise",   #"trust") 
-#AC_sentiment_by_chapter %>% select(-index) %>%
-#map(get_emotion_plot)
-get_emotion_plot(AC_sentiment_by_chapter,"anger")
-#AC_sentiment_by_chapter$"anger"
-```
+When looking at this chart, it highlights that overall this book always expressed high levels of joy, at least when we compare it to the previous graph Other than Chapter 0, which is the preface, although there are chapters that express especially a high level of joy, that even the lowest chapters have high levels of joy. This can give us a sense of how the author of the authors true feeling about the college and the viewpoint in which the writing is going to be from. 
 
 
