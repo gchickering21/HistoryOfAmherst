@@ -4,11 +4,8 @@ author: "Clara Seo and Graham Chickering"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: 
   pdf_document:
-    fig_height: 3
-    fig_width: 5
     toc: true
 ---
-
 
 ```{r, setup, include=FALSE}
 library(mosaic)  
@@ -31,15 +28,11 @@ knitr::opts_chunk$set(
 
 # Executive Summary (for Biddy)
 
-This should be self-contained and up to one page in length (imagine that is *all* that she would read).
-
 Facts do not speak for themselves. One could argue that history cannot be purely objective as the past only turn into facts of history by virtue of both significance and subsequent elements of interpretation attached to them by the historians. Neil Munro, a Scottish journalist and literary critic, argues in his essay on *Objectivity in History* that the notion of historical truth is hindered by the inherent subjectivity in the mind of the historian, regardless of their objective methodologies. He comments that a historian who, "gathers the facts from the history is also a human being, who comes with a full complement of background, education, attitudes, opinions, likes and dislikes. Historian will inevitably see the course of history through those particular eyes." [^1] 
 
 [^1]: http://isfp.sdf.org/essays/munro1.html
 
-**Unlocking the past with W. S. Tyler's historical account of Amherst College** 
-
-We analyzed a detailed and thorough documentation called *History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler.  Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
+We analyzed a detailed and thorough documentation called *History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler. Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
 
 Understanding the limitations of both history and the historian, we believed that text analysis of the History was warranted. We hope to gain insight into the College's history, specifically 1) what key events are highlighted, and 2) how did Tyler as the history interpret and depict the History. 
 
@@ -47,15 +40,13 @@ First, we explored the text to get a sense of the book's content and to quantify
 
 Then, we conducted sentiment analysis, the process of using text analysis and statistics to extract and identify sentiment of words into positive or negative categories. Our analysis conclude that the book had an overall strong positive presence. Notably, we found two chapters to be particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). The historian craft is about telling all the facts, showing all sides to the story - the good, the bad, and the ugly. Still, what is written in this book is relative to the customs, tastes, and opinions of the historian. We appreciated Tyler's faithful attempt at the reconstruction of the College's history. 
 
-Finally, we designed a [word cloud Shiny app](www.bit.ly/1EqAdIp) to get a visual overview of what the book as a whole and also what each individual chapter is about. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader.
+Finally, we designed a [word cloud Shiny app](https://gchickering21.shinyapps.io/ShinyApp/) to get a visual overview of what the book as a whole and also what each individual chapter is about. For example, below is the word cloud for Chapter 26: The War. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader. 
+
+![Chapter 26 Word Cloud](chapter26_wordcloud.png){height=22%}
 
 \newpage
 
 # Wrangling
-
-Your wrangling should go here.  If you need to do extensive processing of the chapters then please read in that output here and reference where I can find the other code.
-
-Details matter: please be attentive to aspects of appearance and code style.
 
 ```{r}
 loc <- "chapter_files/"
@@ -92,6 +83,8 @@ hyphen_cleanup <- function(chapter, r) {
 }
 ```
 
+The first helper function `hyphen_cleanup()` deals with the hypenated words. The function first parses through the text to determine where the hyphenated words split between two different lines are. Then, it will remove the hyphen and concatenate the two halves of the word to the first of the two lines that the original hyphenated word was split among. Below is a small test example to illustrate what the `hyphen_cleanup()` function does. 
+
 ```{r testing helper function 1}
 test1 <- c("The blue house is in the mid-", 
           "dle of the farm, surrounded by wildflo-",
@@ -111,17 +104,19 @@ punctuation_cleanup <- function(chapter, q) {
   
   if (is_start_punctuation[q] == TRUE && !is.na(is_start_punctuation[q])) {
 
-    # extract trailing punctuation, delete from carry-over line, trim spaces out
+    # extract leading punctuation, delete from carry-over line, trim spaces out
     punc_to_bring_over <- str_extract(chapter[q], regex("^[[:punct:]]"))
     chapter[q] <- str_remove(chapter[q], "^[[:punct:]]")
     chapter[q] <- str_trim(chapter[q], side = "left")
 
-    # concatenate sentence with trailing punctuation
+    # concatenate sentence with leading punctuation
     chapter[q - 1] <- paste(chapter[q - 1], punc_to_bring_over, sep = "")
   }
   return(chapter)
 }
 ```
+
+The second helper function `punctuation_cleanup()` deals with the leading punctuation, which arise after hyphenated words have been cleaned up. The function first determines which lines lead with an astray punctuation that would make most sense to be tagged at the end of the preceding line. Then it will remove that punctuation from the original line and add it to the end of the preceding line. Below is a small test example to illustrate what the `punctuation_cleanup()` function does. 
 
 ```{r testing helper function 2}
 test2 <- c("The bagels and croissants are really good", 
@@ -155,7 +150,7 @@ removeHyphen_concat <- function(df, index) {
   chapter <- str_trim(chapter, side = "both")
   
   for (q in 1:length(chapter)) {
-    # helper function: 1) deletes trailing punctuation, 
+    # helper function: 1) deletes leading punctuation, 
     #                  2) concatenates punctuation to end of sentence 
     chapter <- punctuation_cleanup(chapter, r)
   }
@@ -164,6 +159,8 @@ removeHyphen_concat <- function(df, index) {
   return(chapter_collapse)
 }
 ```
+
+The third helper function `removeHyphen_concat()` includes the `hyphen_cleanup()` and `punctuation_cleanup()` helper functions. Below is a small test example to illustrate what the `removeHyphen_concat()` function does. 
 
 ```{r testing helper function 3}
 chapter1_test <- c("chapter1", 
@@ -202,55 +199,21 @@ clean_data <- function(df){
   
   return(df)
 }
-
-texts_df <- clean_data(texts_df)
 ```
 
+The function `clean_data()` includes the `removeHyphen_concat()` function (which includes the `hyphen_cleanup()` and `punctuation_cleanup()` helper functions). This function manipulates a dataframe of strings that contain both hyphenated words and leading punctuations that to be cleaned up. This function will go through each string and fix all issues with regards to hyphens and punctuations. 
+
 ```{r}
+texts_df <- clean_data(texts_df)
+
 ## saving newly cleaned dataset as a csv file called "all_texts.csv"
 write.csv(x=texts_df, file="all_texts.csv")
 ```
- 
-\newpage
-```{r}
-## This creates a separate dataframe for each chapter, 
-## and also combines each chapter into a book as well.
-n_chapters <- nrow(texts_df)
-text <- c("")
-book <- data.frame()
-chapters<-data.frame(text)
 
-## This gets all the chapters into their own separate df's
-for (i in 1:n_chapters) {
-  # single string of text that contains the entire chapter
-  temp_chapter <- texts_df[i, 2]
-  string_chapter <- stringr::str_split(temp_chapter, "\n")[[1]]
-  num_lines <- length(string_chapter)
-  chapter_df <- tibble(line = 1:num_lines,chapter_number = string_chapter) %>%
-    select(chapter_number)
-  book <- rbind(book, chapter_df)
-  chapters <- cbindX(chapters, chapter_df)
-  
-  # rename string with appropriate chapter number
-  assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
-}
-```
-
-```{r}
-## This combines all the chapters together and renames all the column rows
-colnames(chapters) <- paste("Chapter", -1:28, sep = "")
-colnames(book)<-paste("Book")
-chapters <-chapters %>% select(-"Chapter-1")
-chapters <-cbindX(book, chapters) 
-
-## saving newly cleaned dataset as a csv file called "all_chapters.csv"
-write.csv(x=chapters, file="all_chapters.csv")
-```
+After cleaning the original source data using `clean_data()`, we exported it as a csv file called `all_tests.csv`.
 
 \newpage
 # Analysis
-
-This should include your analyses and interpretation. 
 
 ```{r new csv data read-in}
 # Read in all files from a folder called "chapter_files"
@@ -258,6 +221,14 @@ all_texts_df <- read.csv(file="all_texts.csv")
 ```
 
 ## TF-IDF Analysis
+
+Term frequency, $tf(t,d)$, is the raw count, or the number of times that term $t$ occurs in given document $d$. This statistic tells us how frequently a word occurs in a document. 
+
+Inverse document frequency, $idf(t,D)$, is a logarithmically scaled inverse fraction, meaning that it diminishes the weight for commonly used words in a given text and increases the weight for words that occur rarely. The idf for any given term is defined as follows: 
+$$idf(t, D) = ln\bigg(\frac{D}{n_\text{documents containing the term}}\bigg)$$,
+
+where $t$ is the term of interest and $D$ is total number of documents. A high $idf$ value means that the term occured in fewer of the documents in the collection. A low $idf$ value (close to zero) means that the term occurs in many of the documents in the collection. When combined with the $tf$ statistic, we can calculate the term's $tf-idf$, the frequency of a term accounting for how frequently it is used across a collection of documents. A high $tf-idf$ value means that the term is more relevant in that one specific document from the collection of documents. 
+
 ```{r, warning=FALSE}
 ACbook_counts <- all_texts_df %>%
   mutate(chapterNum = X - 1) %>%
@@ -285,6 +256,8 @@ tf_ordered <- tidy_DTM %>%
 tf_ordered[1:25, 1:6]
 ```
 
+Looking at the top 25 terms with highest $tf$ scores, we are not surprised to see the words "college", "history", "academy", and "Amherst" dominate the charts. 
+
 \newpage
 ```{r}
 tfidf_ordered <- tidy_DTM %>%
@@ -292,16 +265,19 @@ tfidf_ordered <- tidy_DTM %>%
 tfidf_ordered[1:25, 1:6]
 ```
 
-First, we looked at the most frequent terms. The usual suspects, unsurprisingly, are "stop words" such as "the", "are", "a", etc. After filtering the "stop words" we saw some potential patterns.
+Now, looking at the top 25 terms with highest $tf-idf$ scores, we find that different and a more diverse array of words are at the top of the ranks: "celebration", "article" "battle", "convention". We also note that each term is specific to a chapter, making that term a characteristic descriptor of that specific chapter. This was later helpful in constructing our word clouds.  
 
 \newpage
 ## Sentiment Analysis
-```{r sentiment, fig.width=8, fig.height=5}
-# get_sentiments() - tidytext package's three sentiment lexicons
-# bing lexicon categorizes words in a binary fashion into positive/negative
-# afinn lexicon assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)
-# nrc lexicon categorizes words in a binary fashion into categories of: positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, trust
 
+There are three widely used lexicons based on unigrams (or single words) : 
+- bing: categorizes words in a binary fashion into positive/negative
+- AFINN: assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)
+- nrc: categorizes words in a binary fashion into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust
+
+First, we decided to use the bing lexicon in hopes that using the most binary categorization would bring out the stark differences in overall sentiment between the chapters. 
+
+```{r sentiment, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 ACbook_sentiment_by_chapter <- tidy_DTM %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
   count(index = chapterNum, sentiment) %>%
@@ -317,8 +293,54 @@ ggplot(data = ACbook_sentiment_by_chapter, aes(x = index, y = sentiment)) +
   )
 ```
 
+Looking above at the graph, we conclude that the book had an overall strong positive presence. Additionally, we note that there are two chapters that are particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). Based on the chapter titles, it is unsurprising that these two chapters have been singled out as trending negative in terms of overall sentiment. 
+
 \newpage
-```{r, fig.width=8, fig.height=5}
+```{r, message=FALSE, warning=FALSE}
+nrc<-tidytext::get_sentiments("nrc")
+
+AC_sentiment_by_chapter <- tidy_DTM %>%
+  inner_join(get_sentiments("nrc"), by = "word") %>% 
+  count(index=chapterNum, sentiment) %>% 
+  spread(sentiment, n, fill = 0)
+```
+
+By breaking down the sentiments not just into negative and postive (bing lexicon) but rather getting a sense of what emotions are actually being highly used in the chapters, one can begin to get a better understanding of how the material in that chapter is going to be written about.
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= fear)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
+  labs(x="Chapter", y=paste( "Fear Count",sep=" "), 
+       title=paste( "Amount of Fear Change Over the Course of the Book (nrc lexicon)", sep=" "))
+```
+
+From this graph we can see that the individual chapters range widely in terms of the amount of fear contained in the chapter. As we can see chapters 0,3,15, and 27 are all chapters with very low fear, whereas chapters 14, 16, and 28 all have very high levels of fear. 
+
+\newpage
+Chapters with High Levels of Fear   
+- Chapter 14: Period of Reaction and Decline - Resignation of President Humphrey  
+- Chapter 16: Biographical Sketches of President Humphrey and some of his associates  
+- Chapter 28: Then and Now - Panoramic Review of Change and Progress  
+
+Chapters with Low Levels of Fear  
+- Chapter 0: Preface  
+- Chapter 3: Amherst Academy  
+- Chapter 15: The Religious History of This Period  
+- Chapter 27: The Semi-Centennial Celebration  
+
+Above are the chapter titles of each category. We are able to reconcile our findings on levels of fear with the chapter titles and its contents. 
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= joy)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
+  labs(x="Chapter", y=paste( "Joy Count",sep=" "), 
+       title=paste( "Amount of Joy Change Over the Course of the Book (nrc lexicon)", sep=" "))
+```
+
+When looking at this chart, it highlights that overall this book always expressed high levels of joy, at least when we compare it to the previous graph. Although there are chapters that express especially a high level of joy, aside from Chapter 0 (the preface), even the lowest chapters have high levels of joy. This can give us a sense of how the author of the authors true feeling about the college and the viewpoint in which the writing is going to be from. 
+
+\newpage
+```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 bing_word_counts <- tidy_DTM %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
   count(word, sentiment) %>%
@@ -338,26 +360,37 @@ bing_word_counts %>%
   coord_flip()
 ```
 
-First, we looked at the most frequent terms. The usual suspects, unsurprisingly, are "stop words" such as "the", "are", "a", etc. After filtering the "stop words" we saw some potential patterns.
+Taking a more holistic look at the sentiments expressed in the entire book, we examined the top 20 contributors to the negative and positive sentiments (as outlined by the bing lexicon). As we approach the bicentennial celebration, it has been interesting to examine the specific words the characterize the founding fifty years of the College's history and get a sense of the first fifty years of trials, tribulations, and triumphs to make the Amherst College that stands here today. 
 
+\newpage
 ## Word Cloud
 
-See "WordCloud.R" for the code that generates our Word Cloud Shiny app!
+Click this link to see our Shiny app: https://gchickering21.shinyapps.io/ShinyApp/. See "app.R" within the "ShinyApp" folder for the code that generates our Word Cloud Shiny app. Below are a few example of the word clouds we generated using the Shiny app. 
+
+![Chapter 3 Amherst Academy](chapter3_wordcloud.png){height=30%}
+
+![Chapter 5 Efforts to Unite Williams College and the Institution at Amherst](chapter5_wordcloud.png){height=30%}
+
+![Chapter 25 Benefactors of the College](chapter25_positive.png){height=30%}
+
+![Chapter 26 The War](chapter26_negative.png){height=30%}
 
 \newpage
 # Discussion
 
-Here I am expecting two or three paragraphs
+After completing the data wrangling portion of the project, we started off by performing TF-IDF analysis to get a sense of what the book, claiming to recount the first fifty years of Amherst College, was really about. TF-IDF analysis allowed us to quantify what the book is about using three statistics: term frequency (tf), inverse document frequency (idf), and tf-idf ($tf * idf$). Such quantification of the terms in the book helped us gain a better holistic understanding of the content discussed in the book and within each individual chapter
 
-What did you learn?  
+After performing the TF-IDF analysis, we wanted to perform sentiment analysis using the bing lexicon to try to get an understanding of the overall sentiments of the individual chapters. From the graphs we learned that the book overall had a very high positive sentiment, and in particular chapters 16, 20, and 25 were especially positive. From the graph though we learned chapters 14 and 26 were the only two chapters with negative sentiments. Using the nrc lexicon, we wanted to perform further sentiment analysis to see what types of emotions were prevalent in certain chapters as well. When exploring emotions like joy and fear across the different chapters, we were able to perform further analysis to understand the prevalence of these different emotions across the different chapters. For the joy emotion, we were able to see that overall besides for chapter 0, which was the preface, that every chapter had a relatively high score for the number of words that contained the joy emotion.When comparing this to the fear emotion, we can see that there is a much larger range for how much fear was within each chapter, and that overall the fear count was much lower across the book than the joy count. In particular chapters Chapter 0, 3,15, and 27 all had especially low levels of fear whereas chapters Chapter 14, 16, and 28 all had high levels of fear. 
 
-What insights did you glean?
+Taking what we learned from the overall sentiments of the chapters themselves, we wanted to use the word cloud generator to see if we could get a sense of what sort of information the book itself, and each chapter contained. By being able to choose the frequency each word had to appear and the number of words we wanted to see, we could begin to get high level overviews of what the ideas and topics each individual chapter contained. 
+
+By then combining what we learned from the word cloud with what we learned from the sentiment analysis, we were able to gain not only a better understanding of the type of content that each chapter contains, but also gain a better understanding of the author’s emotions and feelings about the subject he wrote about. As mentioned earlier, history can never be purely objective and what the analysis in this project allowed us to see was the content the book has covered in addition to the perspective from which the author wrote and his internal attitudes/biases/opinions that was projected on his historical account of Amherst College.   
 
 \newpage
 # Technical Appendix
 
-In a paragraph or two, describe what wrangling or analysis you did that went above and beyond what was discussed in chapter 19 of MDSR: https://beanumber.github.io/mdsr2e/ch-text.html 
+For this project the aspects that we felt that we went above and beyond were the removal of hyphens and punctuation cleanup, visual graphics that display multiple types of sentiment analysis in order to get a more thorough picture of the types of emotions that are present in each chapter, and a word cloud Shiny app that allows the user to find the top words by chapter. Each of these three mini projects allowed us to work with cleaner data that then helped us extract more meaningful insights from our visualizations and analysis.
 
-- removing hyphens and punctuations
-- word cloud 
-- visual graphs 
+For the data wrangling aspect of the project, on top of fixing words that had hyphens in them, we felt it was important to also clean up the punctuation whenever we fixed the hyphenated words. For the sentiment analysis portion, we started off by using the bing lexicon to get an understanding of how positive and negative the sentiment in each chapter was. From there, we wanted to get a deeper understanding of not only the words that highly contributed to the sentiment scores, but also of the actual emotions present in the chapter. By using the nrc lexicon, we were further able to break down the chapters and see what chapters contained high or low levels of emotions such as fear, joy, and anger.
+
+The final piece that allowed us to perform more in depth analysis was the interactive Shiny App. By having the ability to sort by the different chapters and allow the user to determine how many of the top words one wants to see, this allowed us to get a sense of the material that was actually covered in each chapter. This worked especially well in combination with the sentiment analysis to not only get a high level idea of who or what would be covered in each chapter, but we could then see the moods and emotions about the ideas that were being written about. 

@@ -161,8 +161,6 @@ AC_sentiment_by_chapter <- tidy_DTM %>%
   inner_join(get_sentiments("nrc"), by = "word") %>% 
   count(index=chapterNum, sentiment) %>% 
   spread(sentiment, n, fill = 0)
-AC_sentiment_by_chapter
-
 ```
 
 By breaking down the sentiments not just into negative and postive but rather getting a sense of what emotions are actually being highly used in the chapters, one can begin to get a better understanding of how the material in that chapter is going to be written about.
