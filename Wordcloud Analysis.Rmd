@@ -1,0 +1,50 @@
+---
+title: "Word Cloud"
+author: "Graham Chickering"
+date: "9/29/2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(mdsr)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(kableExtra)
+library(tm)
+library(RColorBrewer)
+library(kableExtra)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+get_keywords <- function(chapter) {
+  cleaned_book <- read.csv(file = "all_chapters.csv") %>% select(-X)
+  chapter <- cleaned_book[, grepl(chapter, names(cleaned_book))]
+  chapter <- na.omit(chapter)
+  chapter <- as.data.frame(chapter)
+  names(chapter)[1] <- paste("text")
+
+  word_count <- chapter %>%
+    tidytext::unnest_tokens(word, text) %>%
+    anti_join(tidytext::get_stopwords(), by = "word") %>%
+    count(word, sort = TRUE) %>%
+    select(word, n)
+}
+```
+
+
+```{r}
+set.seed(1962)
+terms<-get_keywords("Book")
+head(terms,30)
+  wordcloud(
+      words=terms$word,
+      freq=terms$n, max.words=30,
+      scale = c(4, 0.5), colors = brewer.pal(6, "Purples")
+    )
+```
+Note: This is a word cloud of the top 30 words that are used throughout the book. As we can see this book is going to talk a lot about the college and the student themselves. It is also interesting to see the words church, men, trustees, dollars, and great appear as some of the top words used in the book.
+

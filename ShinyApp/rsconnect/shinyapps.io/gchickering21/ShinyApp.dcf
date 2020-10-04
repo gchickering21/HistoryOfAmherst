@@ -1,0 +1,12 @@
+name: ShinyApp
+title: ShinyApp
+username:
+account: gchickering21
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2941344
+bundleId: 3701738
+url: https://gchickering21.shinyapps.io/ShinyApp/
+when: 1601842993.38187
+asMultiple: FALSE
+asStatic: FALSE
