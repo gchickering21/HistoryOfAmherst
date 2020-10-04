@@ -14,6 +14,14 @@ output:
 library(mosaic)  
 library(tidyverse)
 library(mdsr)
+library(readtext)
+library(tidytext)
+library(dplyr)
+library(tidyr)
+library(gdata)
+library(ggplot2)
+library(tokenizers)
+library(stopwords)
 knitr::opts_chunk$set(
   tidy=FALSE,     # display code as typed
   size="small")   # slightly smaller font for code
@@ -25,40 +33,29 @@ knitr::opts_chunk$set(
 
 This should be self-contained and up to one page in length (imagine that is *all* that she would read).
 
-Our central question we asked
-- 
+Facts do not speak for themselves. One could argue that history cannot be purely objective as the past only turn into facts of history by virtue of both significance and subsequent elements of interpretation attached to them by the historians. Neil Munro, a Scottish journalist and literary critic, argues in his essay on *Objectivity in History* that the notion of historical truth is hindered by the inherent subjectivity in the mind of the historian, regardless of their objective methodologies. He comments that a historian who, "gathers the facts from the history is also a human being, who comes with a full complement of background, education, attitudes, opinions, likes and dislikes. Historian will inevitably see the course of history through those particular eyes." [^1] 
 
-Our motivations 
-- 
+[^1]: http://isfp.sdf.org/essays/munro1.html
 
-History is often recounted in a biased, subjective manner. One's implicit and subconcious biases are imposed the text that one writes. 
-- Given that the book we have analyzed is a historical acccount of Amherst College's founding 50 years, a text analysis of such was warranted in light of recent events that brought awareness and stressed the importance of a complete narrative to history. 
-- get a sense of how biased the text was, and our analysis conclude that the book as a whole had a strong positive presence, which is unsurprising.
-- we found two chapters to be particularly strong in negative sentiments.
-- the art of recounting history is about telling all sides of the story, the good, the bad, and the ugly.
+**Unlocking the past with W. S. Tyler's historical account of Amherst College** 
 
+We analyzed a detailed and thorough documentation called *History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler.  Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
 
-- Chapter 14 (negative): slavery, Humphrey 
-- Chapter 26 (negative): battle, war, army, service 
+Understanding the limitations of both history and the historian, we believed that text analysis of the History was warranted. We hope to gain insight into the College's history, specifically 1) what key events are highlighted, and 2) how did Tyler as the history interpret and depict the History. 
 
-- Chapter 16 (positive): Humphrey, Fiske, church
-- Chapter 20 (positive): Stearns, trustees, Hitchcock, Walker, presidency
-- Chapter 25 (positive): church, Boston, education, dollars, Appleton, Williston, library, money, income
+First, we explored the text to get a sense of the book's content and to quantify what the book is about. We looked at the words that made up the book and determined the word's term frequency ($tf$) and inverse document frequency ($idf$). $tf$ is the number of times that term $t$ occurs in given text. Unsurprisingly, terms like college, history, academy, work, institution, war, trustees, Amherst, and Williams held the highest $tf$. $idf$ is a measure of how much information the word provides (i.e. how common or rare the word is across all documents). These two statistics are combined to calculate a term's $tf-idf$, a measure of how important a word is to a given collection of texts (i.e. collection of the 29 chapters in the History) adjusted for how rarely it is used. The top. Words like celebration, article, battle, convention, villages, army, revival, and valley were in the top 25 of the $tf-idf$ statistic. 
 
-We designed a word cloud to get a visual sense of what each chapter is about.
-- a more fun way of showing the keywords to each chapter
-- the word cloud allows us to get a higher level understanding of what the chapter is about. 
+Then, we conducted sentiment analysis, the process of using text analysis and statistics to extract and identify sentiment of words into positive or negative categories. Our analysis conclude that the book had an overall strong positive presence. Notably, we found two chapters to be particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). The historian craft is about telling all the facts, showing all sides to the story - the good, the bad, and the ugly. Still, what is written in this book is relative to the customs, tastes, and opinions of the historian. We appreciated Tyler's faithful attempt at the reconstruction of the College's history. 
 
-Sentiment analysis is the process of using text analysis and statistics to extract and identify sentiment of words into positive, negative, or neutral categories. It can be thought of a categorical framework in which the given text can be labelled as certain sentiments and to a specific degree. 
-There are limitations to such analysis. Even before labeling a given text with a sentiment, determining what is a "sentiment" is in the first place is subject to bias. The complexity comes from the multi-layered nature of human-generated sentences (i.e. sarcasm, irony, implied meaning). 
-
-Importance of Objectivity in history 
-
-
+Finally, we designed a [word cloud Shiny app](www.bit.ly/1EqAdIp) to get a visual overview of what the book as a whole and also what each individual chapter is about. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader.
 
 \newpage
 
 # Wrangling
+
+Your wrangling should go here.  If you need to do extensive processing of the chapters then please read in that output here and reference where I can find the other code.
+
+Details matter: please be attentive to aspects of appearance and code style.
 
 ```{r}
 loc <- "chapter_files/"
@@ -67,14 +64,287 @@ sample_chapter <- readLines(paste(loc, "chapter01.txt", sep = ""))
 head(sample_chapter, 30)
 ```
 
-Your wrangling should go here.  If you need to do extensive processing of the chapters then please read in that output here and reference where I can find the other code.
+\newpage
+```{r data read-in}
+# Read in all files from a folder called "chapter_files"
+texts_df <- as.data.frame(readtext("chapter_files/*.txt"))
+```
 
-Details matter: please be attentive to aspects of appearance and code style.
+```{r helper function 1}
+hyphen_cleanup <- function(chapter, r) {
+  # determine which lines end with hyphen
+  is_end_hyphen <- str_detect(chapter, regex("\\-$"))
+  
+  if (is_end_hyphen[r] == TRUE && !is.na(is_end_hyphen[r])) {
+    # extract second-half of hyphenated word, delete from carry-over line
+    second_half <- str_extract(chapter[r + 1], regex("^\\w+"))
+    chapter[r + 1] <- gsub(
+      str_extract(chapter[r + 1], regex("^\\w+")), "",
+      chapter[r + 1]
+    )
+    chapter[r + 1] <- str_trim(chapter[r + 1], side = "left")
 
+    # delete the end-hyphen, concatenate first- and second-half of hyphenated word
+    chapter[r] <- gsub("\\-$", "", chapter[r])
+    chapter[r] <- paste(chapter[r], second_half, sep = "")
+  }
+  return(chapter)
+}
+```
+
+```{r testing helper function 1}
+test1 <- c("The blue house is in the mid-", 
+          "dle of the farm, surrounded by wildflo-",
+          "wers. The woman is baking pret-",
+          "zel buns coated in cinnamon.")
+for(i in 1:length(test1)){
+  test1 <- hyphen_cleanup(test1, i)
+}
+test1
+```
+
+\newpage
+```{r helper function 2}
+punctuation_cleanup <- function(chapter, q) {
+  # determine which lines start with punctuation
+  is_start_punctuation <- str_detect(chapter, regex("^[[:punct:]]"))
+  
+  if (is_start_punctuation[q] == TRUE && !is.na(is_start_punctuation[q])) {
+
+    # extract trailing punctuation, delete from carry-over line, trim spaces out
+    punc_to_bring_over <- str_extract(chapter[q], regex("^[[:punct:]]"))
+    chapter[q] <- str_remove(chapter[q], "^[[:punct:]]")
+    chapter[q] <- str_trim(chapter[q], side = "left")
+
+    # concatenate sentence with trailing punctuation
+    chapter[q - 1] <- paste(chapter[q - 1], punc_to_bring_over, sep = "")
+  }
+  return(chapter)
+}
+```
+
+```{r testing helper function 2}
+test2 <- c("The bagels and croissants are really good", 
+          "! The chai latte gives you soft and fuzzy feelings",
+          "; the matcha latte is scrumptious",
+          ". This cafe is my favorite.")
+for(i in 1:length(test2)){
+  test2 <- punctuation_cleanup(test2, i)
+}
+test2
+```
+
+\newpage
+```{r helper function 3}
+# function to remove hyphens and merge hyphenated words
+removeHyphen_concat <- function(df, index) {
+  chapter <- df[index, 2]
+
+  # strsplit returns a list: we only want the first element
+  chapter <- stringr::str_split(chapter, "\n")[[1]]
+
+  # remove whitespaces on the right side (at end of line)
+  chapter <- str_trim(chapter, side = "both")
+
+  for (r in 1:length(chapter)) {
+    # helper function: 1) deletes hyphen, 2) concatenates word 
+    chapter <- hyphen_cleanup(chapter, r)
+  }
+
+  # remove whitespaces on the right side (at end of line)
+  chapter <- str_trim(chapter, side = "both")
+  
+  for (q in 1:length(chapter)) {
+    # helper function: 1) deletes trailing punctuation, 
+    #                  2) concatenates punctuation to end of sentence 
+    chapter <- punctuation_cleanup(chapter, r)
+  }
+  
+  chapter_collapse <- paste(chapter, collapse=" \n ")
+  return(chapter_collapse)
+}
+```
+
+```{r testing helper function 3}
+chapter1_test <- c("chapter1", 
+                   "She works at a countryclub as a life- \n guard. This summer job will help her sup- \n port her family. She hopes to study hard and get into a good coll- \n ege!")
+chapter2_test <- c("chapter2",
+                   "The dogs are barking really loudly, while runn- \n ing around the fields like cra- \n zy! The owners are having a cute pic- \n nic under the tree in the breezy sha- \n de; they are snacking on grapes and cheese and wine.")
+chapter3_test <- c("chapter3",
+                   "Halloween is right around the corn- \n er! We all cannot believe its alrea- \n dy October! I cannot wait to stuff myself with chocol- \n ate bars and candy; I cannot wait to wear my piglet onsie.")
+
+df_test3 <- rbind.data.frame(chapter1_test, chapter2_test, chapter3_test)
+colnames(df_test3) <- c("chapters", "text")
+
+for(i in 1:nrow(df_test3)){
+  df_test3[i,2] <- removeHyphen_concat(df_test3, i)
+}
+df_test3[1:3, 2]
+```
+
+\newpage
+```{r}
+# mega-function that 1) renames chapters 
+#                    2) removes hyphens, miscellaneous punctuation
+clean_data <- function(df){
+  
+  n_chapters <- nrow(df)
+
+  # STEP 1: rename chapters in doc_id from chapter##.txt to chapter##
+  for(i in 1:n_chapters){
+    df[i,1] <- paste("chapter", i-1, sep="")
+  }
+  
+  # STEP 2: use removeHyphen_concat() to remove hyphens and misc. punctuation
+  for(i in 1:n_chapters){
+    df[i,2] <- removeHyphen_concat(df, i)
+  }
+  
+  return(df)
+}
+
+texts_df <- clean_data(texts_df)
+```
+
+```{r}
+## saving newly cleaned dataset as a csv file called "all_texts.csv"
+write.csv(x=texts_df, file="all_texts.csv")
+```
+ 
+\newpage
+```{r}
+## This creates a separate dataframe for each chapter, 
+## and also combines each chapter into a book as well.
+n_chapters <- nrow(texts_df)
+text <- c("")
+book <- data.frame()
+chapters<-data.frame(text)
+
+## This gets all the chapters into their own separate df's
+for (i in 1:n_chapters) {
+  # single string of text that contains the entire chapter
+  temp_chapter <- texts_df[i, 2]
+  string_chapter <- stringr::str_split(temp_chapter, "\n")[[1]]
+  num_lines <- length(string_chapter)
+  chapter_df <- tibble(line = 1:num_lines,chapter_number = string_chapter) %>%
+    select(chapter_number)
+  book <- rbind(book, chapter_df)
+  chapters <- cbindX(chapters, chapter_df)
+  
+  # rename string with appropriate chapter number
+  assign(paste("chapter", i - 1, "_df", sep = ""), chapter_df)
+}
+```
+
+```{r}
+## This combines all the chapters together and renames all the column rows
+colnames(chapters) <- paste("Chapter", -1:28, sep = "")
+colnames(book)<-paste("Book")
+chapters <-chapters %>% select(-"Chapter-1")
+chapters <-cbindX(book, chapters) 
+
+## saving newly cleaned dataset as a csv file called "all_chapters.csv"
+write.csv(x=chapters, file="all_chapters.csv")
+```
+
+\newpage
 # Analysis
 
 This should include your analyses and interpretation. 
 
+```{r new csv data read-in}
+# Read in all files from a folder called "chapter_files"
+all_texts_df <- read.csv(file="all_texts.csv")
+```
+
+## TF-IDF Analysis
+```{r, warning=FALSE}
+ACbook_counts <- all_texts_df %>%
+  mutate(chapterNum = X - 1) %>%
+  select(-X) %>%
+
+  # prepare data in useable format for text analysis
+  tidytext::unnest_tokens(word, text) %>%
+
+  # exclude stop words (i.e. the, an, a, you)
+  anti_join(tidytext::get_stopwords(), by = "word") %>%
+
+  # count word frequencies for a given chapter
+  count(chapterNum, word, sort = TRUE) %>%
+  mutate(freq = n) %>%
+  select(chapterNum, word, freq)
+
+tidy_DTM <- ACbook_counts %>%
+  tidytext::bind_tf_idf(word, chapterNum, freq)
+```
+
+\newpage
+```{r}
+tf_ordered <- tidy_DTM %>%
+  arrange(desc(tf))
+tf_ordered[1:25, 1:6]
+```
+
+\newpage
+```{r}
+tfidf_ordered <- tidy_DTM %>%
+  arrange(desc(tf_idf)) 
+tfidf_ordered[1:25, 1:6]
+```
+
+First, we looked at the most frequent terms. The usual suspects, unsurprisingly, are "stop words" such as "the", "are", "a", etc. After filtering the "stop words" we saw some potential patterns.
+
+\newpage
+## Sentiment Analysis
+```{r sentiment, fig.width=8, fig.height=5}
+# get_sentiments() - tidytext package's three sentiment lexicons
+# bing lexicon categorizes words in a binary fashion into positive/negative
+# afinn lexicon assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)
+# nrc lexicon categorizes words in a binary fashion into categories of: positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, trust
+
+ACbook_sentiment_by_chapter <- tidy_DTM %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(index = chapterNum, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+ggplot(data = ACbook_sentiment_by_chapter, aes(x = index, y = sentiment)) +
+  geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) +
+  labs(
+    x = "Chapter",
+    y = "Overall Sentiment",
+    title = "Sentiment Change Over the Course of the Book (bing lexicon)"
+  )
+```
+
+\newpage
+```{r, fig.width=8, fig.height=5}
+bing_word_counts <- tidy_DTM %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
+  count(word, sentiment) %>%
+  ungroup()
+
+## identify and visually assess top 20 contributors to each sentiment
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ggplot(aes(reorder(word, n), n, fill = sentiment)) +
+  geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(
+    y = "Contribution to Sentiment", x = NULL,
+    title = "Top 10 Contributors of Each Sentiment"
+  ) +
+  coord_flip()
+```
+
+First, we looked at the most frequent terms. The usual suspects, unsurprisingly, are "stop words" such as "the", "are", "a", etc. After filtering the "stop words" we saw some potential patterns.
+
+## Word Cloud
+
+See "WordCloud.R" for the code that generates our Word Cloud Shiny app!
+
+\newpage
 # Discussion
 
 Here I am expecting two or three paragraphs
@@ -83,6 +353,7 @@ What did you learn?
 
 What insights did you glean?
 
+\newpage
 # Technical Appendix
 
 In a paragraph or two, describe what wrangling or analysis you did that went above and beyond what was discussed in chapter 19 of MDSR: https://beanumber.github.io/mdsr2e/ch-text.html 

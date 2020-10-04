@@ -60,15 +60,27 @@ ACbook_counts <- texts_df %>%
 tidy_DTM <- ACbook_counts %>%
   tidytext::bind_tf_idf(word, chapterNum, freq)
 
-tidy_DTM %>%
-  arrange(desc(tf)) %>%
-  head()
+tf_order <- tidy_DTM %>%
+  arrange(desc(tf))
+
+tfidf_order <- tidy_DTM %>%
+  arrange(desc(tf_idf)) 
 ```
 Term frequency, tf(t,d) - raw count, number of times that term $t$ occurs in given document $d$, how frequently a word occurs in a document
 Inverse document frequency, idf(t,D) - constant per corpus of D documents, accounts for ratio of documents that include the word $t$, measure of how much information the word provides (i.e. common or rar across all documents), logarithmically scaled inverse fraction, incorporated to diminish the weight of terms that occur very frequently in the given text and increases the weight of terms that occur rarely.
 TF-IDF = tf(t,d)*idf(t,D), high tf-idf means high term frequency and low document frequency of term 
 
 A central question in text analysis is how to quantify what a document is about. Can we do such quantification by looking at the words that make up the document? 
+
+The tf-idf statistic has identified the kinds of words it is intended to, important words for individual documents within a collection of documents.
+- given us insight into the content of NASA description fields
+- good measure of the importance of a particular word for a given document 
+
+Unlocking the past with historical account of Amherst College 
+
+First, we looked at the most frequent terms. The usual suspects, unsurprisingly, are "stop words" such as "the", "are", "a", etc. After filtering the "stop words" we saw some potential patterns.
+
+Using sentiment analysis, we noticed a genera sense of. a cluster of particularly negative words in two chapters.
 
 ```{r sentiment}
 # get_sentiments() - tidytext package's three sentiment lexicons

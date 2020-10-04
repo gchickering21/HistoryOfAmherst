@@ -167,12 +167,10 @@ for (i in 1:n_chapters) {
 ```{r}
 ##This combines all the chapters together and renames all the column rows
 colnames(chapters) <- paste("Chapter", -1:28, sep = "")
-colnames(book)<-paste("Book")
+colnames(book) <- paste("Book")
 chapters<-chapters %>% select(-"Chapter-1")
 chapters<-cbindX(book, chapters) 
 ```
-
-
 
 ```{r}
 # saving newly cleaned dataset as a csv file called "all_texts"
