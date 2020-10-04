@@ -28,21 +28,21 @@ knitr::opts_chunk$set(
 
 # Executive Summary (for Biddy)
 
-Facts do not speak for themselves. One could argue that history cannot be purely objective as the past only turn into facts of history by virtue of both significance and subsequent elements of interpretation attached to them by the historians. Neil Munro, a Scottish journalist and literary critic, argues in his essay on *Objectivity in History* that the notion of historical truth is hindered by the inherent subjectivity in the mind of the historian, regardless of their objective methodologies. He comments that a historian who, "gathers the facts from the history is also a human being, who comes with a full complement of background, education, attitudes, opinions, likes and dislikes. Historian will inevitably see the course of history through those particular eyes." [^1] 
+Facts do not speak for themselves. One could argue that history cannot be purely objective as the past only turn into facts of history by virtue of both significance and subsequent elements of interpretation attached to them by the historians. Neil Munro, a Scottish journalist and literary critic, argues in his essay on "Objectivity in History" that the notion of historical truth is hindered by the inherent subjectivity in the mind of the historian, regardless of their objective methodologies. He comments that a historian who, "gathers the facts from the history is also a human being, who comes with a full complement of background, education, attitudes, opinions, likes and dislikes. Historian will inevitably see the course of history through those particular eyes." [^1] 
 
 [^1]: http://isfp.sdf.org/essays/munro1.html
 
-We analyzed a detailed and thorough documentation called *History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler. Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
+We analyzed a detailed and thorough documentation called "History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler. Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
 
 Understanding the limitations of both history and the historian, we believed that text analysis of the History was warranted. We hope to gain insight into the College's history, specifically 1) what key events are highlighted, and 2) how did Tyler as the history interpret and depict the History. 
 
-First, we explored the text to get a sense of the book's content and to quantify what the book is about. We looked at the words that made up the book and determined the word's term frequency ($tf$) and inverse document frequency ($idf$). $tf$ is the number of times that term $t$ occurs in given text. Unsurprisingly, terms like college, history, academy, work, institution, war, trustees, Amherst, and Williams held the highest $tf$. $idf$ is a measure of how much information the word provides (i.e. how common or rare the word is across all documents). These two statistics are combined to calculate a term's $tf-idf$, a measure of how important a word is to a given collection of texts (i.e. collection of the 29 chapters in the History) adjusted for how rarely it is used. The top. Words like celebration, article, battle, convention, villages, army, revival, and valley were in the top 25 of the $tf-idf$ statistic. 
+First, we explored the text to get a sense of the book's content and to quantify what the book is about. We looked at the words that made up the book and determined the word's term frequency ($tf$) and inverse document frequency ($idf$). Unsurprisingly, terms like college, history, academy, work, institution, war, trustees, Amherst, and Williams were some of the most common words in the book (based on the $tf$ statistic). In contrast, words like celebration, article, battle, convention, villages, army, revival, and valley were some of the most unique and rare words used in the book (based on the $tf-idf$ statistic). 
 
 Then, we conducted sentiment analysis, the process of using text analysis and statistics to extract and identify sentiment of words into positive or negative categories. Our analysis conclude that the book had an overall strong positive presence. Notably, we found two chapters to be particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). The historian craft is about telling all the facts, showing all sides to the story - the good, the bad, and the ugly. Still, what is written in this book is relative to the customs, tastes, and opinions of the historian. We appreciated Tyler's faithful attempt at the reconstruction of the College's history. 
 
 Finally, we designed a [word cloud Shiny app](https://gchickering21.shinyapps.io/ShinyApp/) to get a visual overview of what the book as a whole and also what each individual chapter is about. For example, below is the word cloud for Chapter 26: The War. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader. 
 
-![Chapter 26 Word Cloud](chapter26_wordcloud.png){height=22%}
+Through this analysis, we were able to gain insight into the founding fifty years of Amherst College. By generating the word clouds and  conducting sentiment analysis, we were able to extract the topics that were covered in each chapter and also get a sense of how the author projected - both intentionally and unintentionally - his biases, interpretations, and opinions on the subject matter.
 
 \newpage
 
@@ -270,10 +270,10 @@ Now, looking at the top 25 terms with highest $tf-idf$ scores, we find that diff
 \newpage
 ## Sentiment Analysis
 
-There are three widely used lexicons based on unigrams (or single words) : 
-- bing: categorizes words in a binary fashion into positive/negative
-- AFINN: assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)
-- nrc: categorizes words in a binary fashion into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust
+There are three widely used lexicons based on unigrams (or single words):  
+- bing: categorizes words in a binary fashion into positive/negative  
+- AFINN: assigns words with a score between -5 (negative sentiment) and +5 (positive sentiment)  
+- nrc: categorizes words in a binary fashion into categories of positive, negative, anger, anticipation, disgust, fear, joy, sadness, surprise, and trust  
 
 First, we decided to use the bing lexicon in hopes that using the most binary categorization would bring out the stark differences in overall sentiment between the chapters. 
 
