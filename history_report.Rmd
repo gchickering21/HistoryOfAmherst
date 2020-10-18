@@ -50,17 +50,21 @@ knit_hooks$set(output = function(x, options) {
 
 Facts do not speak for themselves. One could argue that history cannot be purely objective as the past only turn into facts of history by virtue of both significance and subsequent elements of interpretation attached to them by the historians. Neil Munro, a Scottish journalist and literary critic, argues in his essay on "Objectivity in History" that the notion of historical truth is hindered by the inherent subjectivity in the mind of the historian, regardless of their objective methodologies [@munroneilObjectivityHistory]. He comments that a historian who, "gathers the facts from the history is also a human being, who comes with a full complement of background, education, attitudes, opinions, likes and dislikes. Historian will inevitably see the course of history through those particular eyes." 
 
-We analyzed a detailed and thorough documentation called "History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler [@tylerHistoryAmherstCollege1873]. Tyler graduated as part of the Amherst College Class of 1830, was a professor of Latin and Greek at Amherst and later named Williston Professor Emeritus. 
+We analyzed a detailed and thorough documentation called "History of Amherst College during its first half century, 1821-1871" (we will refer to this text as "the History") by William Seymour Tyler [@tylerHistoryAmherstCollege1873]. Tyler graduated as part of the Amherst College Class of 1830, was a Williston Professor of Latin and Greek at Amherst. 
 
-Understanding the limitations of both history and the historian, we believed that text analysis of the History was warranted. We hope to gain insight into the College's history, specifically 1) what key events are highlighted, and 2) how did Tyler as the history interpret and depict the History. 
+With the bicentennial celebrations of Amherst College, we thought it would be interesting to explore and rediscover the founding fifty years of our college's history through Tyler's historical archive. Additionally, we believed that a text analysis of the History was warranted, given  the limitations of both history and the historian. We hope to gain insight into the College's history, specifically what key events are highlighted, and how did Tyler as the historian interpret and depict the History. 
 
 First, we explored the text to get a sense of the book's content and to quantify what the book is about. We looked at the words that made up the book and determined the word's term frequency ($tf$) and inverse document frequency ($idf$). Unsurprisingly, terms like college, history, academy, work, institution, war, trustees, Amherst, and Williams were some of the most common words in the book (based on the $tf$ statistic that tells us how frequently a word occurs in a given document). In contrast, words like villages (chapter 1), article and convention (both chapter 4), Williamstown (chapter 5), revival (chapter 18), battle and army (both chapter 26), celebration (chapter 27) were some of the most unique and rare words used in the book (based on the $tf-idf$ statistic). The $tf-idf$ statistic was proven useful as a scoring measure used in summarization of the chapters of the History. These keywords belong to specific chapters, making them characteristic terms that represent the chapter of interest and give us a quick taste of the chapter's contents. 
 
 Then, we conducted sentiment analysis, the process of using text analysis and statistics to extract and identify sentiment of words into positive or negative categories. Our analysis conclude that the book had an overall strong positive presence. Notably, we found two chapters to be particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). The historian craft is about telling all the facts, showing all sides to the story - the good, the bad, and the ugly. Still, what is written in this book is relative to the customs, tastes, and opinions of the historian. We appreciated Tyler's faithful attempt at the reconstruction of the College's history. 
 
-Finally, we designed a [word cloud Shiny app](https://gchickering21.shinyapps.io/ShinyApp/) to get a visual overview of what the book as a whole and also what each individual chapter is about. For example, below is the word cloud for Chapter 26: The War. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader. 
+Finally, we designed a word cloud Shiny app (https://r.amherst.edu/apps/nhorton/historyG) to get a visual overview of what the book as a whole and also what each individual chapter is about. For example, below is the word cloud for Chapter 26: The War. The Shiny app is a fun, dynamic platform where we can show the keywords of each chapter to any curious reader. 
 
-Through this analysis, we were able to gain insight into the founding fifty years of Amherst College. By generating the word clouds and conducting sentiment analysis, we were able to extract the topics that were covered in each chapter and also get a sense of how the author projected - both intentionally and unintentionally - his biases, interpretations, and opinions on the subject matter.
+Through this analysis, we were able to gain insight into the founding fifty years of Amherst College. We were successful in achieving both of our goals: 
+
+1. By generating the word clouds, we were able to extract the topics that were covered in each chapter. These word clouds gave us quick glimpses of the key events in Amherst College's founding fifty years (i.e. the Amherst Academy, the rift with Williams College, resignation of President Humphrey, the war, etc.)
+
+2. The sentiment analysis gave us a sense of how Tyler projected - both intentionally and unintentionally - his biases, interpretations, and opinions on the subject matter. Overall, he spoke highly and positively of the College's history. With that being said, a diverse array of sentiments (fear, joy, disgust, anger, anticipation, sadness, surprise, trust) were picked up in the text.  
 
 \newpage
 
@@ -321,13 +325,10 @@ ACbook_sentiment_by_chapter <- tidy_DTM %>%
 
 ggplot(data = ACbook_sentiment_by_chapter, aes(x = index, y = sentiment)) +
   geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) +
-  labs(
-    x = "Chapter",
-    y = "Overall Sentiment",
-    title = "Sentiment Change Over the Course of the Book (bing lexicon)"
-  ) +
+  labs(x = "Chapter", y = "Overall Sentiment",
+       title = "Sentiment Change Over the Course of the Book (bing lexicon)") +
   annotate(geom = "text", x = 14, y = 15, label = "Chapter 14", color = "red", angle = 90) +
-  annotate(geom = "text", x = 26, y = 15, label = "Chapter 14", color = "red", angle = 90)
+  annotate(geom = "text", x = 26, y = 15, label = "Chapter 26", color = "red", angle = 90)
 ```
 
 Looking above at the graph, we conclude that the book had an overall strong positive presence. Additionally, we note that there are two chapters that are particularly strong in negative sentiments: Chapter 14 (Period of Reaction and Decline - Resignation of President Humphrey) and Chapter 26 (The War). Based on the chapter titles, it is unsurprising that these two chapters have been singled out as trending negative in terms of overall sentiment. 
@@ -342,15 +343,15 @@ AC_sentiment_by_chapter <- tidy_DTM %>%
   spread(sentiment, n, fill = 0)
 ```
 
-By breaking down the sentiments not just into negative and postive (bing lexicon) but rather getting a sense of what emotions are actually being highly used in the chapters, one can begin to get a better understanding of how the material in that chapter is going to be written about.
+By breaking down the sentiments not just into negative and positive (bing lexicon) but rather getting a sense of what emotions are actually being highly used in the chapters, one can begin to gain a better understanding of how the content of that chapter is going to be written about.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=4.7}
 ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= fear)) +
   geom_bar(alpha = 0.5, stat = "identity", show.legend = FALSE) + 
   labs(x="Chapter", y=paste( "Fear Count",sep=" "), 
        title=paste( "Amount of Fear Change Over the Course of the Book (nrc lexicon)", sep=" ")) +
   
-  annotate(geom = "text", x = 0, y = 21, label = "Chapter 0", color = "blue", angle = 90) + 
+  annotate(geom = "text", x = 0, y = 21, label = "Preface", color = "blue", angle = 90) + 
   annotate(geom = "text", x = 3, y = 20, label = "Chapter 3", color = "blue", angle = 90) + 
   annotate(geom = "text", x = 15, y = 26, label = "Chapter 15", color = "blue", angle = 90) +
   annotate(geom = "text", x = 27, y = 19, label = "Chapter 27", color = "blue", angle = 90) +
@@ -373,7 +374,7 @@ Chapters with High Levels of Fear
 
 Chapters with Low Levels of Fear  
 
-- Chapter 0: Preface  
+- Preface (Chapter 0)
 
 - Chapter 3: Amherst Academy  
 
@@ -381,7 +382,7 @@ Chapters with Low Levels of Fear
 
 - Chapter 27: The Semi-Centennial Celebration  
 
-Above are the chapter titles of each category. We are able to reconcile our findings on levels of fear with the chapter titles and its contents. 
+Above are the chapter titles of both fear categories: high and low levels of fear. We are able to reconcile our findings on levels of fear with the chapter titles and chapter contents. 
 
 ```{r, message=FALSE, warning=FALSE}
 ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= joy)) +
@@ -390,7 +391,7 @@ ggplot(data= AC_sentiment_by_chapter , aes(x=index, y= joy)) +
        title=paste( "Amount of Joy Change Over the Course of the Book (nrc lexicon)", sep=" "))
 ```
 
-When looking at this chart, it highlights that overall this book always expressed high levels of joy, at least when we compare it to the previous graph. Although there are chapters that express especially a high level of joy, aside from Chapter 0 (the preface), even the lowest chapters have high levels of joy. This can give us a sense of how the author of the authors true feeling about the college and the viewpoint in which the writing is going to be from. 
+When looking at this chart, it highlights that overall this book always expressed high levels of joy, at least when we compare it to the previous graph. Although there are chapters that express especially a high level of joy, aside from Chapter 0 (the preface), even the lowest chapters have high levels of joy. This can give us a sense of what Tyler's true feelings about the college - in particular, the viewpoint from which he wrote and the emotions that would be conveyed through his language. 
 
 \newpage
 ```{r, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
@@ -418,22 +419,24 @@ Taking a more holistic look at the sentiments expressed in the entire book, we e
 \newpage
 ## Word Cloud
 
-Click this link to see our Shiny app: https://gchickering21.shinyapps.io/ShinyApp/. See "app.R" within the "ShinyApp" folder for the code that generates our Word Cloud Shiny app. Below are a few example of the word clouds we generated using the Shiny app. 
+Click this link to see our Shiny app: https://r.amherst.edu/apps/nhorton/historyG. See "app.R" within the "ShinyApp" folder for the code that generates our Word Cloud Shiny app. You can either choose to look at the word cloud of the entire book or of a specific chapter in the book. Once you choose the text of interest, you can change two parameters - minimum frequency and maximum number of words - to tune and tailor your word cloud to your liking. The lower the minimum frequency the more words appear on the word cloud as there is a lower threshold to appearing on the word cloud. The lower the maximum number of words, the less populated and more selective the word cloud will be.Below are a few example of the word clouds we generated using the Shiny app. 
 
-![Chapter 3 Amherst Academy](chapter3_wordcloud.png){height=30%}
+![Chapter 3 Amherst Academy](chapter3freq5.png){height=30%}
 
-![Chapter 5 Efforts to Unite Williams College and the Institution at Amherst](chapter5_wordcloud.png){height=30%}
+![Chapter 5 Efforts to Unite Williams College and the Institution at Amherst](chapter5freq11.png){height=30%}
 
-![Chapter 25 Benefactors of the College](chapter25_positive.png){height=30%}
+![Chapter 25 Benefactors of the College](chapter25freq20.png){height=30%}
 
-![Chapter 26 The War](chapter26_negative.png){height=30%}
+![Chapter 26 The War](chapter26freq12.png){height=30%}
+
+Given the title of the chapters, the terms that appear on the word cloud are unsurprising. Without reading the entire chapter, one can gain a quick summary of the chapter by looking at the word cloud and the title of the chapter. 
 
 \newpage
 # Discussion
 
 After completing the data wrangling portion of the project, we started off by performing TF-IDF analysis to get a sense of what the book, claiming to recount the first fifty years of Amherst College, was really about. TF-IDF analysis allowed us to quantify what the book is about using three statistics: term frequency (tf), inverse document frequency (idf), and tf-idf ($tf * idf$). Such quantification of the terms in the book helped us gain a better holistic understanding of the content discussed in the book and within each individual chapter
 
-After performing the TF-IDF analysis, we wanted to perform sentiment analysis using the bing lexicon to try to get an understanding of the overall sentiments of the individual chapters. From the graphs we learned that the book overall had a very high positive sentiment, and in particular chapters 16, 20, and 25 were especially positive. From the graph though we learned chapters 14 and 26 were the only two chapters with negative sentiments. Using the nrc lexicon, we wanted to perform further sentiment analysis to see what types of emotions were prevalent in certain chapters as well. When exploring emotions like joy and fear across the different chapters, we were able to perform further analysis to understand the prevalence of these different emotions across the different chapters. For the joy emotion, we were able to see that overall besides for chapter 0, which was the preface, that every chapter had a relatively high score for the number of words that contained the joy emotion.When comparing this to the fear emotion, we can see that there is a much larger range for how much fear was within each chapter, and that overall the fear count was much lower across the book than the joy count. In particular chapters Chapter 0, 3,15, and 27 all had especially low levels of fear whereas chapters Chapter 14, 16, and 28 all had high levels of fear. 
+After performing the TF-IDF analysis, we wanted to perform sentiment analysis using the bing lexicon to try to get an understanding of the overall sentiments of the individual chapters. From the graphs we learned that the book overall had a very high positive sentiment, and in particular chapters 16, 20, and 25 were especially positive. From the graph though we learned chapters 14 and 26 were the only two chapters with negative sentiments. Using the nrc lexicon, we wanted to perform further sentiment analysis to see what types of emotions were prevalent in certain chapters as well. When exploring emotions like joy and fear across the different chapters, we were able to perform further analysis to understand the prevalence of these different emotions across the different chapters. For the joy emotion, we were able to see that overall besides for chapter 0, which was the preface, that every chapter had a relatively high score for the number of words that contained the joy emotion.When comparing this to the fear emotion, we can see that there is a much larger range for how much fear was within each chapter, and that overall the fear count was much lower across the book than the joy count. In particular chapters Chapter 0, 3, 15, and 27 all had especially low levels of fear whereas chapters Chapter 14, 16, and 28 all had high levels of fear. 
 
 Taking what we learned from the overall sentiments of the chapters themselves, we wanted to use the word cloud generator to see if we could get a sense of what sort of information the book itself, and each chapter contained. By being able to choose the frequency each word had to appear and the number of words we wanted to see, we could begin to get high level overviews of what the ideas and topics each individual chapter contained. 
 
