@@ -7,6 +7,8 @@ library(shinybusy)
 library(mdsr)
 library(tidytext)
 library(stopwords)
+library(shinythemes)
+library(DT)
 
 cleaned_book <- read.csv(file = "all_chapters.csv")
 
@@ -26,9 +28,34 @@ get_keywords <- function(chapter, num_freq, num_words) {
     head(word_count, num_words)
 }
 
+get_sentiment <- function(chapter, num_freq, num_words) {
+    cleaned_book <- read.csv(file = "all_chapters.csv")
+    chapter <- cleaned_book[, grepl(chapter, names(cleaned_book))]
+    chapter <- na.omit(chapter)
+    chapter <- as.data.frame(chapter)
+    names(chapter)[1] <- paste("text")
+    
+    Chapter_Counts <- chapter %>%
+        tidytext::unnest_tokens(word, text) %>%
+        # exclude stop words (i.e. the, an, a, you)
+        anti_join(tidytext::get_stopwords(), by = "word") %>%
+        # count word frequencies for a given chapter
+        count(word, sort = TRUE) %>%
+        mutate(freq = n) %>%
+        select(word, freq) %>%
+        inner_join(get_sentiments("bing"), by = "word") %>%
+        # count(word, sentiment) %>%
+        ungroup() %>%
+        filter(freq > num_freq) %>%
+        group_by(sentiment) %>%
+        head(num_words)
+    # return(Chapter_Counts)
+}
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-    titlePanel("Amherst History Word Cloud"),
+    theme = shinytheme("united"),
+    titlePanel("History of Amherst"),
     
     sidebarLayout(
         
@@ -41,17 +68,22 @@ ui <- fluidPage(
             hr(),
             sliderInput("freq",
                         "Minimum Frequency:",
-                        min = 1,  max = 500, value = 10
+                        min = 1,  max = 500, value = 25
             ),
             sliderInput("max",
                         "Maximum Number of Words:",
-                        min = 1, max = 50, value = 10
+                        min = 1, max = 200, value = 10
             )
         ),
         
         # Show Word Cloud
         mainPanel(
-            plotOutput("plot")
+            tabsetPanel(
+                type = "tabs",
+                tabPanel("Wordcloud", plotOutput("plot")),
+                tabPanel("Sentiment Analysis", plotOutput("graph")),
+                tabPanel(" Sentiment Analysis Summary",  DT::dataTableOutput("view"))#, tableOutput("chart"))
+            )
         )
     )
 )
@@ -66,7 +98,28 @@ server <- function(input, output) {
         isolate({
             withProgress({
                 setProgress(message = "Processing corpus...")
-                get_keywords(input$selection, input$freq, input$max)
+                # get_keywords(input$selection, input$freq, input$max)
+                dataset <- get_keywords(input$selection, input$freq, input$max)
+                validate(
+                    need(nrow(dataset) > 0, "Input Not Valid: Enter New Inputs")
+                )
+                return(dataset)
+            })
+        })
+    })
+    
+    sentiment <- reactive({
+        # Change when the "update" button is pressed...
+        input$update
+        # ...but not for anything else
+        isolate({
+            withProgress({
+                setProgress(message = "Processing corpus...")
+                dataset <- get_sentiment(input$selection, input$freq, input$max)
+                validate(
+                    need(nrow(dataset) > 0, "Input Not Valid: Enter New Inputs")
+                )
+                return(dataset)
             })
         })
     })
@@ -79,8 +132,38 @@ server <- function(input, output) {
             words = v$word, freq = v$n,
             scale = c(4, 0.5), # min.freq = input$n,
             # max.words = input$max,
-            colors = brewer.pal(6, "Purples")
+            colors = brewer.pal(7, "BuPu")
         )
+    })
+    
+    output$graph <- renderPlot({
+        v <- sentiment()
+        
+        ggplot(data = v, aes(reorder(word, freq), freq, fill = sentiment)) +
+            geom_bar(alpha = 0.8, stat = "identity", show.legend = FALSE) +
+            facet_wrap(~sentiment, scales = "free_y") +
+            labs(
+                y = "Contribution to Sentiment", x = NULL,
+                title = "Top Contributors of Each Sentiment"
+            ) +
+            coord_flip()
+    })
+    
+    output$chart<-renderTable({
+          v<-sentiment() %>%
+              spread(sentiment, freq, fill = 0) %>%
+               select(-word) %>%
+              mutate(overall_negative_sentiments= sum(negative), overall_positive_sentiments= sum(positive)) %>%
+              mutate(overall_sentiment = overall_positive_sentiments - overall_negative_sentiments) %>%
+              select(overall_sentiment, overall_positive_sentiments, overall_negative_sentiments) %>%
+              head(1)
+        
+        
+    })
+    
+    output$view <- DT::renderDataTable({
+        v<-sentiment()
+        DT::datatable(data=v)
     })
 }
 
